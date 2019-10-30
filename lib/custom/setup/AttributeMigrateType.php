@@ -21,7 +21,7 @@ class AttributeMigrateType extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'TablesCreateMShop' );
+		return array( 'MShopAddLocaleData' );
 	}
 
 
@@ -32,7 +32,7 @@ class AttributeMigrateType extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPostDependencies()
 	{
-		return [];
+		return ['MShopAddTypeData'];
 	}
 
 
@@ -41,7 +41,7 @@ class AttributeMigrateType extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating attribute type data', 0 );
+		$this->msg( 'Migrating Multishop attribute type data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$conn = $this->acquire( 'db-attribute' );

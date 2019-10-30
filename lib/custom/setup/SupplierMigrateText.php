@@ -41,7 +41,7 @@ class SupplierMigrateText extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating supplier text data', 0 );
+		$this->msg( 'Migrating Multishop supplier text data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-supplier' );

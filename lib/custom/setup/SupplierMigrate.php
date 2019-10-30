@@ -21,7 +21,7 @@ class SupplierMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'TablesCreateMShop' );
+		return array( 'MShopAddLocaleData' );
 	}
 
 
@@ -41,7 +41,7 @@ class SupplierMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating supplier base data', 0 );
+		$this->msg( 'Migrating Multishop supplier base data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$conn = $this->acquire( 'db-supplier' );

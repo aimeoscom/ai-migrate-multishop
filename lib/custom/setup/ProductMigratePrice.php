@@ -41,7 +41,7 @@ class ProductMigratePrice extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating product price data', 0 );
+		$this->msg( 'Migrating Multishop product price data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-product' );

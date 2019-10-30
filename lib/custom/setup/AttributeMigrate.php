@@ -32,7 +32,7 @@ class AttributeMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPostDependencies()
 	{
-		return [];
+		return ['MShopAddAttributeDataDefault'];
 	}
 
 
@@ -41,7 +41,7 @@ class AttributeMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating attribute data', 0 );
+		$this->msg( 'Migrating Multishop attribute data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$conn = $this->acquire( 'db-attribute' );

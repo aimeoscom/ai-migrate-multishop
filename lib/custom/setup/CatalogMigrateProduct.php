@@ -41,7 +41,7 @@ class CatalogMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating catalog product references data', 0 );
+		$this->msg( 'Migrating Multishop catalog product references data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-catalog' );

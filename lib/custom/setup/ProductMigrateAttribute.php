@@ -41,7 +41,7 @@ class ProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating product attribute references data', 0 );
+		$this->msg( 'Migrating Multishop product attribute references data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-product' );

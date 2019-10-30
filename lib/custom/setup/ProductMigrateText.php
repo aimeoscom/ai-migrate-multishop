@@ -41,7 +41,7 @@ class ProductMigrateText extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating product text data', 0 );
+		$this->msg( 'Migrating Multishop product text data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-product' );

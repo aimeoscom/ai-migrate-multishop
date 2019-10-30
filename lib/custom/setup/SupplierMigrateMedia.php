@@ -41,7 +41,7 @@ class SupplierMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating supplier media data', 0 );
+		$this->msg( 'Migrating Multishop supplier media data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-supplier' );
