@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="ai-migrate-multishop extension" default="test">
+
+	<target name="test" description="Executes all tests">
+	</target>
+
+	<target name="testperf" description="Executes all performance tests">
+	</target>
+
+	<target name="coverage" description="Generates the code coverage report">
+	</target>
+
+	<target name="check" description="Checks for code quality">
+	</target>
+
+	<target name="clean" description="Cleans up temporary files">
+	</target>
+
+	<target name="i18n" description="Creates all translation files">
+	</target>
+
+	<target name="build" description="Builds package for deployment">
+	</target>
+
+	<target name="release" description="Creates new release" depends="build">
+	</target>
+
+	<target name="all" depends="test,check,build" description="Builds all parts of the package">
+	</target>
+
+</project>
