@@ -43,6 +43,14 @@ class CatalogMigrateText extends \Aimeos\MW\Setup\Task\Base
 	{
 		$this->msg( 'Migrating Multishop catalog text data', 0 );
 
+		if( ( $langs = $this->additional->getConfig()->get( 'setup/ai-migrate-multishop/languages' ) ) === null )
+		{
+			throw new \Exception( '
+				Configuration for required sys_language.id to two letter ISO language codes map
+				is missing in "setup/ai-migrate-multishop/languages"
+			' );
+		}
+
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-catalog' );
 		$conn = $this->acquire( 'db-text' );
@@ -53,12 +61,7 @@ class CatalogMigrateText extends \Aimeos\MW\Setup\Task\Base
 		$pconn->create( 'DELETE FROM "mshop_catalog_list" WHERE domain=\'text\'' )->execute()->finish();
 		$conn->create( 'DELETE FROM "mshop_text" WHERE domain=\'catalog\'' )->execute()->finish();
 
-		$select = '
-			SELECT cd.*, l."language_isocode"
-			FROM tx_multishop_categories_description cd
-			JOIN sys_language l ON cd.language_id = l.uid
-			LIMIT 1000 OFFSET :offset
-		';
+		$select = 'SELECT * FROM tx_multishop_categories_description LIMIT 1000 OFFSET :offset';
 		$plinsert = '
 			INSERT INTO "mshop_catalog_list"
 			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
@@ -94,9 +97,15 @@ class CatalogMigrateText extends \Aimeos\MW\Setup\Task\Base
 				{
 					if( $row[$colname] != '' )
 					{
+						if( !isset( $langs[$row['language_id']] ) )
+						{
+							$msg = 'Two letter ISO language code for sys_language ID "%1$s" is missing in "setup/ai-migrate-multishop/languages" configuration!';
+							throw new \Exception( sprintf( $msg, $row['language_id'] ) );
+						}
+
 						$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 						$stmt->bind( 2, $type );
-						$stmt->bind( 3, $row['language_isocode'] ?? null );
+						$stmt->bind( 3, $langs[$row['language_id']] );
 						$stmt->bind( 4, mb_strcut( strip_tags( $row[$colname] ), 0, 100 ) );
 						$stmt->bind( 5, $row[$colname] );
 						$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );

@@ -43,6 +43,14 @@ class ProductMigrateText extends \Aimeos\MW\Setup\Task\Base
 	{
 		$this->msg( 'Migrating Multishop product text data', 0 );
 
+		if( ( $langs = $this->additional->getConfig()->get( 'setup/ai-migrate-multishop/languages' ) ) === null )
+		{
+			throw new \Exception( '
+				Configuration for required sys_language.id to two letter ISO language codes map
+				is missing in "setup/ai-migrate-multishop/languages"
+			' );
+		}
+
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-product' );
 		$conn = $this->acquire( 'db-text' );
@@ -53,12 +61,7 @@ class ProductMigrateText extends \Aimeos\MW\Setup\Task\Base
 		$pconn->create( 'DELETE FROM "mshop_product_list" WHERE domain=\'text\'' )->execute()->finish();
 		$conn->create( 'DELETE FROM "mshop_text" WHERE domain=\'product\'' )->execute()->finish();
 
-		$select = '
-			SELECT pd.*, l."language_isocode"
-			FROM "tx_multishop_products_description" pd
-			JOIN "sys_language" l ON pd."language_id" = l."uid"
-			LIMIT 1000 OFFSET :offset
-		';
+		$select = 'SELECT * FROM "tx_multishop_products_description" LIMIT 1000 OFFSET :offset';
 		$plinsert = '
 			INSERT INTO "mshop_product_list"
 			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
@@ -96,9 +99,15 @@ class ProductMigrateText extends \Aimeos\MW\Setup\Task\Base
 				{
 					if( $row[$colname] && $row[$colname] !== $defText )
 					{
+						if( !isset( $langs[$row['language_id']] ) )
+						{
+							$msg = 'Two letter ISO language code for sys_language ID "%1$s" is missing in "setup/ai-migrate-multishop/languages" configuration!';
+							throw new \Exception( sprintf( $msg, $row['language_id'] ) );
+						}
+
 						$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 						$stmt->bind( 2, $type );
-						$stmt->bind( 3, $row['language_isocode'] ?? null );
+						$stmt->bind( 3, $langs[$row['language_id']] );
 						$stmt->bind( 4, mb_strcut( strip_tags( $row[$colname] ), 0, 100 ) );
 						$stmt->bind( 5, $row[$colname] );
 						$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );

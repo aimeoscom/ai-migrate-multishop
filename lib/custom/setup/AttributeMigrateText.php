@@ -43,6 +43,14 @@ class AttributeMigrateText extends \Aimeos\MW\Setup\Task\Base
 	{
 		$this->msg( 'Migrating Multishop attribute text data', 0 );
 
+		if( ( $langs = $this->additional->getConfig()->get( 'setup/ai-migrate-multishop/languages' ) ) === null )
+		{
+			throw new \Exception( '
+				Configuration for required sys_language.id to two letter ISO language codes map
+				is missing in "setup/ai-migrate-multishop/languages"
+			' );
+		}
+
 		$msconn = $this->acquire( 'db-multishop' );
 		$pconn = $this->acquire( 'db-attribute' );
 		$conn = $this->acquire( 'db-text' );
@@ -54,9 +62,8 @@ class AttributeMigrateText extends \Aimeos\MW\Setup\Task\Base
 		$conn->create( 'DELETE FROM "mshop_text" WHERE domain=\'attribute\'' )->execute()->finish();
 
 		$select = '
-			SELECT pov.products_options_values_id, pov.products_options_values_name, l.language_isocode
+			SELECT pov.products_options_values_id, pov.products_options_values_name, pov.language_id
 			FROM tx_multishop_products_options_values pov
-			JOIN sys_language l ON pov.language_id = l.uid order by products_options_values_id
 			LIMIT 1000 OFFSET :offset
 		';
 		$plinsert = '
@@ -87,8 +94,14 @@ class AttributeMigrateText extends \Aimeos\MW\Setup\Task\Base
 			{
 				if( ( $content = trim ($row['products_options_values_name'] ) ) != '' )
 				{
+					if( !isset( $langs[$row['language_id']] ) )
+					{
+						$msg = 'Two letter ISO language code for sys_language ID "%1$s" is missing in "setup/ai-migrate-multishop/languages" configuration!';
+						throw new \Exception( sprintf( $msg, $row['language_id'] ) );
+					}
+
 					$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-					$stmt->bind( 2, $row['language_isocode'] ?? null );
+					$stmt->bind( 2, $langs[$row['language_id']] );
 					$stmt->bind( 3, mb_strcut( $content, 0, 100 ) );
 					$stmt->bind( 4, $content );
 					$stmt->bind( 5, date( 'Y-m-d H:i:s' ) );
