@@ -19,7 +19,7 @@ class ProductMigratePrice extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPreDependencies()
+	public function getPreDependencies() : array
 	{
 		return array( 'ProductMigrate' );
 	}
@@ -30,7 +30,7 @@ class ProductMigratePrice extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPostDependencies()
+	public function getPostDependencies() : array
 	{
 		return [];
 	}
@@ -57,7 +57,6 @@ class ProductMigratePrice extends \Aimeos\MW\Setup\Task\Base
 			SELECT p.products_id, p.products_price, t."rate"
 			FROM "tx_multishop_products" p
 			JOIN "tx_multishop_taxes" t ON p."tax_id" = t."tax_id"
-			LIMIT 1000 OFFSET :offset
 		';
 		$plinsert = '
 			INSERT INTO "mshop_product_list"
@@ -73,46 +72,35 @@ class ProductMigratePrice extends \Aimeos\MW\Setup\Task\Base
 		$plstmt = $pconn->create( $plinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 
-		$adapter = $this->getSchema( 'db-price' )->getName();
 		$siteId = 1;
-		$start = 0;
 
-		do
+		$result = $msconn->create( $select )->execute();
+
+		while( ( $row = $result->fetch() ) !== false )
 		{
-			$count = 0;
-			$sql = str_replace( ':offset', $start, $select );
-			$result = $msconn->create( $sql )->execute();
+			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 2, number_format( $row['products_price'], 2, '.', '' ) . ' - ' . $row['rate'] );
+			$stmt->bind( 3, 'EUR' );
+			$stmt->bind( 4, number_format( $row['products_price'], 2, '.', '' ) );
+			$stmt->bind( 5, $row['rate'] );
+			$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
+			$stmt->bind( 7, date( 'Y-m-d H:i:s' ) );
+			$stmt->bind( 8, 'ai-migrate-multishop' );
 
-			while( ( $row = $result->fetch() ) !== false )
-			{
-				$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$stmt->bind( 2, number_format( $row['products_price'], 2, '.', '' ) . ' - ' . $row['rate'] );
-				$stmt->bind( 3, 'EUR' );
-				$stmt->bind( 4, number_format( $row['products_price'], 2, '.', '' ) );
-				$stmt->bind( 5, $row['rate'] );
-				$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
-				$stmt->bind( 7, date( 'Y-m-d H:i:s' ) );
-				$stmt->bind( 8, 'ai-migrate-multishop' );
+			$stmt->execute()->finish();
+			$id = $this->getLastId( $conn, 'db-price' );
 
-				$stmt->execute()->finish();
-				$id = $this->getLastId( $conn, $adapter );
+			$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$plstmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$plstmt->bind( 3, 'default|price|' . $id );
+			$plstmt->bind( 4, $id );
+			$plstmt->bind( 5, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );
+			$plstmt->bind( 7, date( 'Y-m-d H:i:s' ) );
+			$plstmt->bind( 8, 'ai-migrate-multishop' );
 
-				$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$plstmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$plstmt->bind( 3, 'default|price|' . $id );
-				$plstmt->bind( 4, $id );
-				$plstmt->bind( 5, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );
-				$plstmt->bind( 7, date( 'Y-m-d H:i:s' ) );
-				$plstmt->bind( 8, 'ai-migrate-multishop' );
-
-				$plstmt->execute()->finish();
-				$count++;
-			}
-
-			$start += $count;
+			$plstmt->execute()->finish();
 		}
-		while( $count > 0 );
 
 		$conn->create( 'COMMIT' )->execute()->finish();
 		$pconn->create( 'COMMIT' )->execute()->finish();

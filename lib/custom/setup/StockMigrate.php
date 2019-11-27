@@ -19,7 +19,7 @@ class StockMigrate extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPreDependencies()
+	public function getPreDependencies() : array
 	{
 		return array( 'MShopAddLocaleData', 'ProductMigrate' );
 	}
@@ -30,7 +30,7 @@ class StockMigrate extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPostDependencies()
+	public function getPostDependencies() : array
 	{
 		return [];
 	}
@@ -50,7 +50,7 @@ class StockMigrate extends \Aimeos\MW\Setup\Task\Base
 
 		$conn->create( 'DELETE FROM "mshop_stock"' )->execute()->finish();
 
-		$select = 'SELECT "products_id", "products_quantity" FROM "tx_multishop_products" LIMIT 1000 OFFSET :offset';
+		$select = 'SELECT "products_id", "products_quantity" FROM "tx_multishop_products"';
 		$insert = '
 			INSERT INTO "mshop_stock"
 			SET "siteid" = ?, "type" = ?, "productcode" = ?, "stocklevel" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?
@@ -58,31 +58,21 @@ class StockMigrate extends \Aimeos\MW\Setup\Task\Base
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$siteId = 1;
-		$start = 0;
 
-		do
+		$result = $msconn->create( $select )->execute();
+
+		while( ( $row = $result->fetch() ) !== false )
 		{
-			$count = 0;
-			$sql = str_replace( ':offset', $start, $select );
-			$result = $msconn->create( $sql )->execute();
+			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 2, 'default' );
+			$stmt->bind( 3, $row['products_id'] );
+			$stmt->bind( 4, $row['products_quantity'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 5, date( 'Y-m-d H:i:s' ) );
+			$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
+			$stmt->bind( 7, 'ai-migrate-multishop' );
 
-			while( ( $row = $result->fetch() ) !== false )
-			{
-				$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$stmt->bind( 2, 'default' );
-				$stmt->bind( 3, $row['products_id'] );
-				$stmt->bind( 4, $row['products_quantity'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$stmt->bind( 5, date( 'Y-m-d H:i:s' ) );
-				$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
-				$stmt->bind( 7, 'ai-migrate-multishop' );
-
-				$stmt->execute()->finish();
-				$count++;
-			}
-
-			$start += $count;
+			$stmt->execute()->finish();
 		}
-		while( $count > 0 );
 
 		$conn->create( 'COMMIT' )->execute()->finish();
 

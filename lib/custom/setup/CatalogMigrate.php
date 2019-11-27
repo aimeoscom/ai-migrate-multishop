@@ -19,7 +19,7 @@ class CatalogMigrate extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPreDependencies()
+	public function getPreDependencies() : array
 	{
 		return array( 'MShopAddLocaleData' );
 	}
@@ -30,7 +30,7 @@ class CatalogMigrate extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPostDependencies()
+	public function getPostDependencies() : array
 	{
 		return [];
 	}
@@ -41,7 +41,7 @@ class CatalogMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating Multishop catalog base data', 0 );
+		$this->msg( 'Migrating Multishop catalog data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
 		$conn = $this->acquire( 'db-catalog' );
@@ -55,7 +55,6 @@ class CatalogMigrate extends \Aimeos\MW\Setup\Task\Base
 			FROM tx_multishop_categories c
 			LEFT JOIN tx_multishop_categories_description cd ON c.categories_id=cd.categories_id AND cd.language_id = 0
 			ORDER BY c.parent_id, c.sort_order
-			LIMIT 1000 OFFSET :offset
 		';
 		$insert = '
 			INSERT INTO "mshop_catalog"
@@ -64,29 +63,19 @@ class CatalogMigrate extends \Aimeos\MW\Setup\Task\Base
 				"level" = ?, "nleft" = ?, "nright" = ?
 		';
 
-		$start = 0;
 		$map = [];
 
-		do
+
+		$result = $msconn->create( $select )->execute();
+
+		while( ( $row = $result->fetch() ) !== false )
 		{
-			$count = 0;
-			$sql = str_replace( ':offset', $start, $select );
-			$result = $msconn->create( $sql )->execute();
+			$map[$row['categories_id']] = $row;
 
-			while( ( $row = $result->fetch() ) !== false )
-			{
-				$map[$row['categories_id']] = $row;
-
-				if( isset( $map[$row['parent_id']] ) ) {
-					$map[$row['parent_id']]['children'][] = $row['categories_id'];
-				}
-
-				$count++;
+			if( isset( $map[$row['parent_id']] ) ) {
+				$map[$row['parent_id']]['children'][] = $row['categories_id'];
 			}
-
-			$start += $count;
 		}
-		while( $count > 0 );
 
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );

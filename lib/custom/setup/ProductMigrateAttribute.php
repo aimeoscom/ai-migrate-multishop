@@ -19,7 +19,7 @@ class ProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPreDependencies()
+	public function getPreDependencies() : array
 	{
 		return array( 'ProductMigrate', 'AttributeMigrate' );
 	}
@@ -30,7 +30,7 @@ class ProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPostDependencies()
+	public function getPostDependencies() : array
 	{
 		return [];
 	}
@@ -53,7 +53,6 @@ class ProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 		$select = '
 			SELECT products_id, options_values_id, sort_order_option_value
 			FROM "tx_multishop_products_attributes"
-			LIMIT 1000 OFFSET :offset
 		';
 		$plinsert = '
 			INSERT INTO "mshop_product_list"
@@ -64,32 +63,22 @@ class ProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 		$plstmt = $pconn->create( $plinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 
 		$siteId = 1;
-		$start = 0;
 
-		do
+		$result = $msconn->create( $select )->execute();
+
+		while( ( $row = $result->fetch() ) !== false )
 		{
-			$count = 0;
-			$sql = str_replace( ':offset', $start, $select );
-			$result = $msconn->create( $sql )->execute();
+			$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$plstmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$plstmt->bind( 3, 'default|attribute|' . $row['options_values_id'] );
+			$plstmt->bind( 4, $row['options_values_id'] );
+			$plstmt->bind( 5, $row['sort_order_option_value'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );
+			$plstmt->bind( 7, date( 'Y-m-d H:i:s' ) );
+			$plstmt->bind( 8, 'ai-migrate-multishop' );
 
-			while( ( $row = $result->fetch() ) !== false )
-			{
-				$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$plstmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$plstmt->bind( 3, 'default|attribute|' . $row['options_values_id'] );
-				$plstmt->bind( 4, $row['options_values_id'] );
-				$plstmt->bind( 5, $row['sort_order_option_value'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );
-				$plstmt->bind( 7, date( 'Y-m-d H:i:s' ) );
-				$plstmt->bind( 8, 'ai-migrate-multishop' );
-
-				$plstmt->execute()->finish();
-				$count++;
-			}
-
-			$start += $count;
+			$plstmt->execute()->finish();
 		}
-		while( $count > 0 );
 
 		$pconn->create( 'COMMIT' )->execute()->finish();
 

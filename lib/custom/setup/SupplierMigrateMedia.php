@@ -19,7 +19,7 @@ class SupplierMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPreDependencies()
+	public function getPreDependencies() : array
 	{
 		return array( 'SupplierMigrate' );
 	}
@@ -30,7 +30,7 @@ class SupplierMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPostDependencies()
+	public function getPostDependencies() : array
 	{
 		return [];
 	}
@@ -53,7 +53,7 @@ class SupplierMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 		$pconn->create( 'DELETE FROM "mshop_supplier_list" WHERE domain=\'media\'' )->execute()->finish();
 		$conn->create( 'DELETE FROM "mshop_media" WHERE domain=\'supplier\'' )->execute()->finish();
 
-		$select = 'SELECT * FROM "tx_multishop_manufacturers" LIMIT 1000 OFFSET :offset';
+		$select = 'SELECT * FROM "tx_multishop_manufacturers"';
 		$plinsert = '
 			INSERT INTO "mshop_supplier_list"
 			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
@@ -68,49 +68,37 @@ class SupplierMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 		$plstmt = $pconn->create( $plinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 
-		$adapter = $this->getSchema( 'db-media' )->getName();
 		$siteId = 1;
-		$start = 0;
 
-		do
+		$result = $msconn->create( $select )->execute();
+
+		while( ( $row = $result->fetch() ) !== false )
 		{
-			$count = 0;
-			$sql = str_replace( ':offset', $start, $select );
-			$result = $msconn->create( $sql )->execute();
-
-			while( ( $row = $result->fetch() ) !== false )
+			if( $row['manufacturers_image'] )
 			{
-				if( $row['manufacturers_image'] )
-				{
-					$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-					$stmt->bind( 2, $row['manufacturers_image'] );
-					$stmt->bind( 3, $row['manufacturers_image'] );
-					$stmt->bind( 4, $this->getMimeType( $row['manufacturers_image'] ) );
-					$stmt->bind( 5, date( 'Y-m-d H:i:s', $row['last_modified'] ?: $row['date_added'] ) );
-					$stmt->bind( 6, date( 'Y-m-d H:i:s', $row['date_added'] ) );
-					$stmt->bind( 7, 'ai-migrate-multishop' );
+				$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$stmt->bind( 2, $row['manufacturers_image'] );
+				$stmt->bind( 3, $row['manufacturers_image'] );
+				$stmt->bind( 4, $this->getMimeType( $row['manufacturers_image'] ) );
+				$stmt->bind( 5, date( 'Y-m-d H:i:s', $row['last_modified'] ?: $row['date_added'] ) );
+				$stmt->bind( 6, date( 'Y-m-d H:i:s', $row['date_added'] ) );
+				$stmt->bind( 7, 'ai-migrate-multishop' );
 
-					$stmt->execute()->finish();
-					$id = $this->getLastId( $conn, $adapter );
+				$stmt->execute()->finish();
+				$id = $this->getLastId( $conn, 'db-media' );
 
-					$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-					$plstmt->bind( 2, $row['manufacturers_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-					$plstmt->bind( 3, 'default|media|' . $id );
-					$plstmt->bind( 4, $id );
-					$plstmt->bind( 5, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-					$plstmt->bind( 6, date( 'Y-m-d H:i:s', $row['last_modified'] ?: $row['date_added'] ) );
-					$plstmt->bind( 7, date( 'Y-m-d H:i:s', $row['date_added'] ) );
-					$plstmt->bind( 8, 'ai-migrate-multishop' );
+				$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$plstmt->bind( 2, $row['manufacturers_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$plstmt->bind( 3, 'default|media|' . $id );
+				$plstmt->bind( 4, $id );
+				$plstmt->bind( 5, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$plstmt->bind( 6, date( 'Y-m-d H:i:s', $row['last_modified'] ?: $row['date_added'] ) );
+				$plstmt->bind( 7, date( 'Y-m-d H:i:s', $row['date_added'] ) );
+				$plstmt->bind( 8, 'ai-migrate-multishop' );
 
-					$plstmt->execute()->finish();
-				}
-
-				$count++;
+				$plstmt->execute()->finish();
 			}
-
-			$start += $count;
 		}
-		while( $count > 0 );
 
 		$conn->create( 'COMMIT' )->execute()->finish();
 		$pconn->create( 'COMMIT' )->execute()->finish();

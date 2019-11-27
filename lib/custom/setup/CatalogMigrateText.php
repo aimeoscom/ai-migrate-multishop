@@ -19,7 +19,7 @@ class CatalogMigrateText extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPreDependencies()
+	public function getPreDependencies() : array
 	{
 		return array( 'CatalogMigrate' );
 	}
@@ -30,7 +30,7 @@ class CatalogMigrateText extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @return string[] List of task names
 	 */
-	public function getPostDependencies()
+	public function getPostDependencies() : array
 	{
 		return [];
 	}
@@ -61,7 +61,7 @@ class CatalogMigrateText extends \Aimeos\MW\Setup\Task\Base
 		$pconn->create( 'DELETE FROM "mshop_catalog_list" WHERE domain=\'text\'' )->execute()->finish();
 		$conn->create( 'DELETE FROM "mshop_text" WHERE domain=\'catalog\'' )->execute()->finish();
 
-		$select = 'SELECT * FROM tx_multishop_categories_description LIMIT 1000 OFFSET :offset';
+		$select = 'SELECT * FROM tx_multishop_categories_description';
 		$plinsert = '
 			INSERT INTO "mshop_catalog_list"
 			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
@@ -81,59 +81,48 @@ class CatalogMigrateText extends \Aimeos\MW\Setup\Task\Base
 			'metatitle' => 'meta_title', 'meta-keywords' => 'keywords', 'meta-description' => 'meta_description',
 		];
 
-		$adapter = $this->getSchema( 'db-text' )->getName();
 		$siteId = 1;
-		$start = 0;
 
-		do
+
+		$result = $msconn->create( $select )->execute();
+
+		while( ( $row = $result->fetch() ) !== false )
 		{
-			$count = 0;
-			$sql = str_replace( ':offset', $start, $select );
-			$result = $msconn->create( $sql )->execute();
-
-			while( ( $row = $result->fetch() ) !== false )
+			foreach( $map as $type => $colname )
 			{
-				foreach( $map as $type => $colname )
+				if( $row[$colname] != '' )
 				{
-					if( $row[$colname] != '' )
+					if( !isset( $langs[$row['language_id']] ) )
 					{
-						if( !isset( $langs[$row['language_id']] ) )
-						{
-							$msg = 'Two letter ISO language code for sys_language ID "%1$s" is missing in "setup/ai-migrate-multishop/languages" configuration!';
-							throw new \Exception( sprintf( $msg, $row['language_id'] ) );
-						}
-
-						$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-						$stmt->bind( 2, $type );
-						$stmt->bind( 3, $langs[$row['language_id']] );
-						$stmt->bind( 4, mb_strcut( strip_tags( $row[$colname] ), 0, 100 ) );
-						$stmt->bind( 5, $row[$colname] );
-						$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
-						$stmt->bind( 7, date( 'Y-m-d H:i:s' ) );
-						$stmt->bind( 8, 'ai-migrate-multishop' );
-
-						$stmt->execute()->finish();
-						$id = $this->getLastId( $conn, $adapter );
-
-						$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-						$plstmt->bind( 2, $row['categories_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-						$plstmt->bind( 3, 'default|text|' . $id );
-						$plstmt->bind( 4, $id );
-						$plstmt->bind( 5, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-						$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );
-						$plstmt->bind( 7, date( 'Y-m-d H:i:s' ) );
-						$plstmt->bind( 8, 'ai-migrate-multishop' );
-
-						$plstmt->execute()->finish();
+						$msg = 'Two letter ISO language code for sys_language ID "%1$s" is missing in "setup/ai-migrate-multishop/languages" configuration!';
+						throw new \Exception( sprintf( $msg, $row['language_id'] ) );
 					}
+
+					$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+					$stmt->bind( 2, $type );
+					$stmt->bind( 3, $langs[$row['language_id']] );
+					$stmt->bind( 4, mb_strcut( strip_tags( $row[$colname] ), 0, 100 ) );
+					$stmt->bind( 5, $row[$colname] );
+					$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
+					$stmt->bind( 7, date( 'Y-m-d H:i:s' ) );
+					$stmt->bind( 8, 'ai-migrate-multishop' );
+
+					$stmt->execute()->finish();
+					$id = $this->getLastId( $conn, 'db-text' );
+
+					$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+					$plstmt->bind( 2, $row['categories_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+					$plstmt->bind( 3, 'default|text|' . $id );
+					$plstmt->bind( 4, $id );
+					$plstmt->bind( 5, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+					$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );
+					$plstmt->bind( 7, date( 'Y-m-d H:i:s' ) );
+					$plstmt->bind( 8, 'ai-migrate-multishop' );
+
+					$plstmt->execute()->finish();
 				}
-
-				$count++;
 			}
-
-			$start += $count;
 		}
-		while( $count > 0 );
 
 		$conn->create( 'COMMIT' )->execute()->finish();
 		$pconn->create( 'COMMIT' )->execute()->finish();
