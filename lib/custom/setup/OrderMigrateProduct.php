@@ -92,7 +92,7 @@ class OrderMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 10, $row['store_currency'] ?: $row['customer_currency'] );
 			$stmt->bind( 11, $row['final_price'] );
 			$stmt->bind( 12, $taxes['total_tax'] ?? '0.0000' );
-			$stmt->bind( 13, $row['products_tax'] ); // tax rate
+			$stmt->bind( 13, json_encode( ['' => $row['products_tax']] ) ); // tax rate
 			$stmt->bind( 14, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 15, $pos++, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 16, date( 'Y-m-d H:i:s', $row['crdate'] ) );

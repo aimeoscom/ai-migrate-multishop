@@ -53,8 +53,9 @@ class OrderMigrateService extends \Aimeos\MW\Setup\Task\Base
 		';
 		$insert = '
 			INSERT INTO "mshop_order_service"
-			SET "siteid" = ?, "orderid" = ?, "type" = ?, "code" = ?, "name" = ?, "currencyid" = ?,
-				"costs" = ?, "tax" = ?, "taxrate" = ?, "taxflag" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
+			SET "siteid" = ?, "orderid" = ?, "type" = ?, "code" = ?, "name" = ?,
+				"currencyid" = ?, "price" = ?, "costs" = ?, "rebate" = ?, "tax" = ?, "taxrate" = ?, "taxflag" = ?,
+				"ctime" = ?, "mtime" = ?, "editor" = ?
 		';
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
@@ -71,19 +72,23 @@ class OrderMigrateService extends \Aimeos\MW\Setup\Task\Base
 				$taxes = [];
 			}
 
+			$discount = $row['discount'] > 0 ? $row['discount'] - $row['coupon_discount_value'] : '0.00';
+
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 3, 'payment' );
 			$stmt->bind( 4, $row['payment_method'] );
 			$stmt->bind( 5, $row['payment_method_label'] );
 			$stmt->bind( 6, $row['store_currency'] ?: $row['customer_currency'] );
-			$stmt->bind( 7, $row['payment_method_costs'] );
-			$stmt->bind( 8, $taxes['payment_tax'] ?? '0.0000' );
-			$stmt->bind( 9, $taxes['payment_total_tax_rate'] ?? '0.00' );
-			$stmt->bind( 10, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 11, date( 'Y-m-d H:i:s', $row['crdate'] ) );
-			$stmt->bind( 12, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
-			$stmt->bind( 13, $row['username'] ?: $row['ip_address'] );
+			$stmt->bind( 7, -$discount );
+			$stmt->bind( 8, $row['payment_method_costs'] );
+			$stmt->bind( 9, $discount );
+			$stmt->bind( 10, $taxes['payment_tax'] ?? '0.0000' );
+			$stmt->bind( 11, json_encode( ['' => $taxes['payment_total_tax_rate'] ?? '0.00'] ) );
+			$stmt->bind( 12, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 13, date( 'Y-m-d H:i:s', $row['crdate'] ) );
+			$stmt->bind( 14, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
+			$stmt->bind( 15, $row['username'] ?: $row['ip_address'] );
 
 			$stmt->execute()->finish();
 
@@ -93,13 +98,15 @@ class OrderMigrateService extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 4, $row['shipping_method'] );
 			$stmt->bind( 5, $row['shipping_method_label'] );
 			$stmt->bind( 6, $row['store_currency'] ?: $row['customer_currency'] );
-			$stmt->bind( 7, $row['shipping_method_costs'] );
-			$stmt->bind( 8, $taxes['shipping_tax'] ?? '0.0000' );
-			$stmt->bind( 9, $taxes['shipping_total_tax_rate'] ?? '0.00' );
-			$stmt->bind( 10, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 11, date( 'Y-m-d H:i:s', $row['crdate'] ) );
-			$stmt->bind( 12, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
-			$stmt->bind( 13, $row['username'] ?: $row['ip_address'] );
+			$stmt->bind( 7, '0.00' );
+			$stmt->bind( 8, $row['shipping_method_costs'] );
+			$stmt->bind( 9, '0.00' );
+			$stmt->bind( 10, $taxes['shipping_tax'] ?? '0.0000' );
+			$stmt->bind( 11, json_encode( ['' => $taxes['shipping_total_tax_rate'] ?? '0.00'] ) );
+			$stmt->bind( 12, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 13, date( 'Y-m-d H:i:s', $row['crdate'] ) );
+			$stmt->bind( 14, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
+			$stmt->bind( 15, $row['username'] ?: $row['ip_address'] );
 
 			$stmt->execute()->finish();
 		}

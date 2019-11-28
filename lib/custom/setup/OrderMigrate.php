@@ -67,7 +67,12 @@ class OrderMigrate extends \Aimeos\MW\Setup\Task\Base
 				"currencyid" = ?, "price" = ?, "costs" = ?, "rebate" = ?, "tax" = ?, "taxflag" = ?, "customerid" = ?, "comment" = ?,
 				"cdate" = ?, "cmonth" = ?, "cweek" = ?, "cwday" = ?, "chour" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
 		';
+		$sinsert = '
+			INSERT INTO "mshop_order_status"
+			SET "siteid" = ?, "parentid" = ?, "type" = ?, "value" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
+		';
 
+		$sstmt = $conn->create( $sinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$taxFlag = $this->additional->getConfig()->get( 'mshop/price/taxflag', 1 );
 		$siteCode = 'default';
@@ -90,12 +95,12 @@ class OrderMigrate extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 3, $siteCode );
 			$stmt->bind( 4, $row['by_phone'] ? 'phone' : 'web' );
 			$stmt->bind( 5, $row['orders_paid_timestamp'] ? date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ): null );
-			$stmt->bind( 6, $row['paid'] ? \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED : -1, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 6, $this->statuspayment( $row ), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 7, $langs[$row['language_id']] );
 			$stmt->bind( 8, $row['store_currency'] ?: $row['customer_currency'] );
 			$stmt->bind( 9, $row['grand_total'] - $row['payment_method_costs'] - $row['shipping_method_costs'] );
 			$stmt->bind( 10, $row['payment_method_costs'] + $row['shipping_method_costs'] );
-			$stmt->bind( 11, $row['discount'] );
+			$stmt->bind( 11, $row['discount'] + $row['coupon_discount_value'] );
 			$stmt->bind( 12, $row['grand_total'] - $row['grand_total_excluding_vat'] );
 			$stmt->bind( 13, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 14, $row['customer_id'] );
@@ -110,6 +115,75 @@ class OrderMigrate extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 23, $row['username'] ?: $row['ip_address'] );
 
 			$stmt->execute()->finish();
+
+			$sstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$sstmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$sstmt->bind( 3, 'stock-update' );
+			$sstmt->bind( 4, 1, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$sstmt->bind( 5, date( 'Y-m-d H:i:s', $row['crdate'] ) );
+			$sstmt->bind( 6, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
+			$sstmt->bind( 7, $row['username'] ?: $row['ip_address'] );
+
+			$sstmt->execute()->finish();
+
+			if( $row['paid'] > 0 )
+			{
+				$sstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 3, 'status-payment' );
+				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 5, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['crdate'] ) );
+				$sstmt->bind( 6, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['orders_last_modified'] ) );
+				$sstmt->bind( 7, $row['username'] ?: $row['ip_address'] );
+
+				$sstmt->execute()->finish();
+
+				$sstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 3, 'email-payment' );
+				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 5, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['crdate'] ) );
+				$sstmt->bind( 6, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['orders_last_modified'] ) );
+				$sstmt->bind( 7, $row['username'] ?: $row['ip_address'] );
+
+				$sstmt->execute()->finish();
+			}
+
+			if( $row['bill'] > 0 )
+			{
+				$sstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 3, 'status-payment' );
+				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 5, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['crdate'] ) );
+				$sstmt->bind( 6, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['orders_last_modified'] ) );
+				$sstmt->bind( 7, $row['username'] ?: $row['ip_address'] );
+
+				$sstmt->execute()->finish();
+
+				$sstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 3, 'email-payment' );
+				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 5, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['crdate'] ) );
+				$sstmt->bind( 6, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['orders_last_modified'] ) );
+				$sstmt->bind( 7, $row['username'] ?: $row['ip_address'] );
+
+				$sstmt->execute()->finish();
+			}
+
+			if( $row['deleted'] > 0 )
+			{
+				$sstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 3, 'status-payment' );
+				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_DELETED, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 5, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['crdate'] ) );
+				$sstmt->bind( 6, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['orders_last_modified'] ) );
+				$sstmt->bind( 7, $row['username'] ?: $row['ip_address'] );
+
+				$sstmt->execute()->finish();
+			}
 		}
 
 		$conn->create( 'COMMIT' )->execute()->finish();
@@ -118,5 +192,23 @@ class OrderMigrate extends \Aimeos\MW\Setup\Task\Base
 		$this->release( $msconn, 'db-multishop' );
 
 		$this->status( 'done' );
+	}
+
+
+	protected function statuspayment( array $row ) : int
+	{
+		if( $row['deleted'] ) {
+			return \Aimeos\MShop\Order\Item\Base::PAY_DELETED;
+		}
+
+		if( !$row['paid'] && $row['bill'] ) {
+			return \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED;
+		}
+
+		if( $row['paid'] ) {
+			return \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED;
+		}
+
+		return \Aimeos\MShop\Order\Item\Base::PAY_UNFINISHED;
 	}
 }

@@ -63,7 +63,7 @@ class OrderMigrateAddress extends \Aimeos\MW\Setup\Task\Base
 		';
 		$insert = '
 			INSERT INTO "mshop_order_address"
-			SET "siteid" = ?, "orderid" = ?, "type" = ?, "salutation" = ?, "company" = ?, "vatid" = ?,
+			SET "siteid" = ?, "orderid" = ?, "addrid" = ?, "type" = ?, "salutation" = ?, "company" = ?, "vatid" = ?,
 				"firstname" = ?, "lastname" = ?, "address1" = ?, "address2" = ?, "address3" = ?, "postal" = ?, "city" = ?,
 				"state" = ?, "langid" = ?, "countryid" = ?, "telephone" = ?, "telefax" = ?, "email" = ?,
 				"ctime" = ?, "mtime" = ?, "editor" = ?
@@ -86,26 +86,27 @@ class OrderMigrateAddress extends \Aimeos\MW\Setup\Task\Base
 
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, 'payment' );
-			$stmt->bind( 4, $this->salutation( $row['billing_gender'] ) );
-			$stmt->bind( 5, $row['billing_company'] );
-			$stmt->bind( 6, $row['billing_vat_id'] );
-			$stmt->bind( 7, $row['billing_first_name'] . ( $row['billing_middle_name'] ? ' ' . $row['billing_middle_name'] : '' ) );
-			$stmt->bind( 8, $row['billing_last_name'] );
-			$stmt->bind( 9, $row['billing_address'] );
-			$stmt->bind( 10, $row['billing_building'] );
-			$stmt->bind( 11, $row['billing_room'] );
-			$stmt->bind( 12, $row['billing_zip'] );
-			$stmt->bind( 13, $row['billing_city'] );
-			$stmt->bind( 14, $row['billing_region'] );
-			$stmt->bind( 15, $langs[$row['language_id']] );
-			$stmt->bind( 16, $row['billing_cc'] );
-			$stmt->bind( 17, $this->telephone( $row['billing_telephone'], $row['billing_mobile'] ) );
-			$stmt->bind( 18, $this->telephone( $row['billing_fax'] ) );
-			$stmt->bind( 19, $row['billing_email'] );
-			$stmt->bind( 20, date( 'Y-m-d H:i:s', $row['crdate'] ) );
-			$stmt->bind( 21, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
-			$stmt->bind( 22, $row['username'] ?: $row['ip_address'] );
+			$stmt->bind( 3, $row['billing_address_number'] );
+			$stmt->bind( 4, 'payment' );
+			$stmt->bind( 5, $this->salutation( $row['billing_gender'] ) );
+			$stmt->bind( 6, $row['billing_company'] );
+			$stmt->bind( 7, $row['billing_vat_id'] );
+			$stmt->bind( 8, $row['billing_first_name'] . ( $row['billing_middle_name'] ? ' ' . $row['billing_middle_name'] : '' ) );
+			$stmt->bind( 9, $row['billing_last_name'] );
+			$stmt->bind( 10, $row['billing_address'] );
+			$stmt->bind( 11, $row['billing_building'] );
+			$stmt->bind( 12, $row['billing_room'] );
+			$stmt->bind( 13, $row['billing_zip'] );
+			$stmt->bind( 14, $row['billing_city'] );
+			$stmt->bind( 15, $row['billing_region'] );
+			$stmt->bind( 16, $langs[$row['language_id']] );
+			$stmt->bind( 17, $row['billing_cc'] );
+			$stmt->bind( 18, $this->telephone( $row['billing_telephone'], $row['billing_mobile'] ) );
+			$stmt->bind( 19, $this->telephone( $row['billing_fax'] ) );
+			$stmt->bind( 20, $row['billing_email'] );
+			$stmt->bind( 21, date( 'Y-m-d H:i:s', $row['crdate'] ) );
+			$stmt->bind( 22, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
+			$stmt->bind( 23, $row['username'] ?: $row['ip_address'] );
 
 			$stmt->execute()->finish();
 
@@ -120,26 +121,27 @@ class OrderMigrateAddress extends \Aimeos\MW\Setup\Task\Base
 			{
 				$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$stmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$stmt->bind( 3, 'delivery' );
-				$stmt->bind( 4, $this->salutation( $row['delivery_gender'] ) );
-				$stmt->bind( 5, $row['delivery_company'] );
-				$stmt->bind( 6, $row['delivery_vat_id'] );
-				$stmt->bind( 7, $row['delivery_first_name'] . ( $row['delivery_middle_name'] ? ' ' . $row['delivery_middle_name'] : '' ) );
-				$stmt->bind( 8, $row['delivery_last_name'] );
-				$stmt->bind( 9, $row['delivery_address'] );
-				$stmt->bind( 10, $row['delivery_building'] );
-				$stmt->bind( 11, $row['delivery_room'] );
-				$stmt->bind( 12, $row['delivery_zip'] );
-				$stmt->bind( 13, $row['delivery_city'] );
-				$stmt->bind( 14, $row['delivery_region'] );
-				$stmt->bind( 15, $langs[$row['language_id']] );
-				$stmt->bind( 16, $row['delivery_cc'] );
-				$stmt->bind( 17, $this->telephone( $row['delivery_telephone'], $row['delivery_mobile'] ) );
-				$stmt->bind( 18, $this->telephone( $row['delivery_fax'] ) );
-				$stmt->bind( 19, $row['delivery_email'] );
-				$stmt->bind( 20, date( 'Y-m-d H:i:s', $row['crdate'] ) );
-				$stmt->bind( 21, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
-				$stmt->bind( 22, $row['username'] ?: $row['ip_address'] );
+				$stmt->bind( 3, $row['delivery_address_number'] );
+				$stmt->bind( 4, 'delivery' );
+				$stmt->bind( 5, $this->salutation( $row['delivery_gender'] ) );
+				$stmt->bind( 6, $row['delivery_company'] );
+				$stmt->bind( 7, $row['delivery_vat_id'] );
+				$stmt->bind( 8, $row['delivery_first_name'] . ( $row['delivery_middle_name'] ? ' ' . $row['delivery_middle_name'] : '' ) );
+				$stmt->bind( 9, $row['delivery_last_name'] );
+				$stmt->bind( 10, $row['delivery_address'] );
+				$stmt->bind( 11, $row['delivery_building'] );
+				$stmt->bind( 12, $row['delivery_room'] );
+				$stmt->bind( 13, $row['delivery_zip'] );
+				$stmt->bind( 14, $row['delivery_city'] );
+				$stmt->bind( 15, $row['delivery_region'] );
+				$stmt->bind( 16, $langs[$row['language_id']] );
+				$stmt->bind( 17, $row['delivery_cc'] );
+				$stmt->bind( 18, $this->telephone( $row['delivery_telephone'], $row['delivery_mobile'] ) );
+				$stmt->bind( 19, $this->telephone( $row['delivery_fax'] ) );
+				$stmt->bind( 20, $row['delivery_email'] );
+				$stmt->bind( 21, date( 'Y-m-d H:i:s', $row['crdate'] ) );
+				$stmt->bind( 22, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
+				$stmt->bind( 23, $row['username'] ?: $row['ip_address'] );
 
 				$stmt->execute()->finish();
 			}
