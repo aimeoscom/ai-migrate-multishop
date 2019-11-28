@@ -12,7 +12,7 @@ namespace Aimeos\MW\Setup\Task;
 /**
  * Migrates the image data from tx_multishop_products table
  */
-class ProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
+class MultishopProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 {
 	/**
 	 * Returns the list of task names which this task depends on.
@@ -21,18 +21,7 @@ class ProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return array( 'ProductMigrate' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return string[] List of task names
-	 */
-	public function getPostDependencies() : array
-	{
-		return [];
+		return ['MultishopProductMigrate'];
 	}
 
 

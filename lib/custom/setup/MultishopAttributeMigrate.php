@@ -12,7 +12,7 @@ namespace Aimeos\MW\Setup\Task;
 /**
  * Migrates the tx_multishop_products_options_values table
  */
-class AttributeMigrate extends \Aimeos\MW\Setup\Task\Base
+class MultishopAttributeMigrate extends \Aimeos\MW\Setup\Task\Base
 {
 	/**
 	 * Returns the list of task names which this task depends on.
@@ -21,7 +21,7 @@ class AttributeMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return array( 'AttributeMigrateType' );
+		return ['MultishopAttributeMigrateType'];
 	}
 
 

@@ -12,7 +12,7 @@ namespace Aimeos\MW\Setup\Task;
 /**
  * Migrates the coupon data from tx_multishop_orders table
  */
-class OrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
+class MultishopOrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 {
 	/**
 	 * Returns the list of task names which this task depends on.
@@ -21,18 +21,7 @@ class OrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return array( 'OrderMigrate', 'OrderMigrateProduct' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return string[] List of task names
-	 */
-	public function getPostDependencies() : array
-	{
-		return [];
+		return ['MultishopOrderMigrate', 'MultishopOrderMigrateProduct'];
 	}
 
 

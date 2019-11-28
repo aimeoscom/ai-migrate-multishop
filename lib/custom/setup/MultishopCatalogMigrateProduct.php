@@ -12,7 +12,7 @@ namespace Aimeos\MW\Setup\Task;
 /**
  * Migrates the catalog catalog references from tx_multishop_products_to_categories table
  */
-class CatalogMigrateProduct extends \Aimeos\MW\Setup\Task\Base
+class MultishopCatalogMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 {
 	/**
 	 * Returns the list of task names which this task depends on.
@@ -21,18 +21,7 @@ class CatalogMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return array( 'CatalogMigrate', 'ProductMigrate' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return string[] List of task names
-	 */
-	public function getPostDependencies() : array
-	{
-		return [];
+		return ['MultishopCatalogMigrate', 'MultishopProductMigrate'];
 	}
 
 

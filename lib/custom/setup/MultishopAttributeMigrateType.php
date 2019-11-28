@@ -10,9 +10,9 @@ namespace Aimeos\MW\Setup\Task;
 
 
 /**
- * Migrates the base data from tx_multishop_manufacturers table
+ * Migrates the tx_multishop_products_options table
  */
-class SupplierMigrate extends \Aimeos\MW\Setup\Task\Base
+class MultishopAttributeMigrateType extends \Aimeos\MW\Setup\Task\Base
 {
 	/**
 	 * Returns the list of task names which this task depends on.
@@ -21,7 +21,7 @@ class SupplierMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return array( 'MShopAddLocaleData' );
+		return ['MultishopMShopAddLocaleData'];
 	}
 
 
@@ -32,7 +32,7 @@ class SupplierMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPostDependencies() : array
 	{
-		return [];
+		return ['MShopAddTypeData'];
 	}
 
 
@@ -41,19 +41,24 @@ class SupplierMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function migrate()
 	{
-		$this->msg( 'Migrating Multishop supplier data', 0 );
+		$this->msg( 'Migrating Multishop attribute type data', 0 );
 
 		$msconn = $this->acquire( 'db-multishop' );
-		$conn = $this->acquire( 'db-supplier' );
+		$conn = $this->acquire( 'db-attribute' );
 
 		$conn->create( 'START TRANSACTION' )->execute()->finish();
 
-		$conn->create( 'DELETE FROM "mshop_supplier"' )->execute()->finish();
+		$conn->create( 'DELETE FROM "mshop_attribute_type"' )->execute()->finish();
 
-		$select = 'SELECT * FROM "tx_multishop_manufacturers"';
+		$select = '
+			SELECT products_options_id, products_options_name
+			FROM tx_multishop_products_options
+			WHERE language_id = 0
+		';
 		$insert = '
-			INSERT INTO "mshop_supplier"
-			SET "siteid" = ?, "id" = ?, "code" = ?, "label" = ?, "status" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?
+			INSERT INTO "mshop_attribute_type"
+			SET "siteid" = ?, "id" = ?, "code" = ?, "label" = ?, "mtime" = ?, "ctime" = ?,
+				"editor" = ?, "domain" = \'product\', "status" = 1
 		';
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
@@ -64,20 +69,19 @@ class SupplierMigrate extends \Aimeos\MW\Setup\Task\Base
 		while( ( $row = $result->fetch() ) !== false )
 		{
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $row['manufacturers_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $row['manufacturers_name'] );
-			$stmt->bind( 4, $row['manufacturers_name'] );
-			$stmt->bind( 5, $row['status'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 6, date( 'Y-m-d H:i:s', $row['last_modified'] ?: $row['date_added'] ) );
-			$stmt->bind( 7, date( 'Y-m-d H:i:s', $row['date_added'] ) );
-			$stmt->bind( 8, 'ai-migrate-multishop' );
+			$stmt->bind( 2, $row['products_options_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 3, $row['products_options_name'] );
+			$stmt->bind( 4, $row['products_options_name'] );
+			$stmt->bind( 5, date( 'Y-m-d H:i:s' ) );
+			$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
+			$stmt->bind( 7, 'ai-migrate-multishop' );
 
 			$stmt->execute()->finish();
 		}
 
 		$conn->create( 'COMMIT' )->execute()->finish();
 
-		$this->release( $conn, 'db-supplier' );
+		$this->release( $conn, 'db-attribute' );
 		$this->release( $msconn, 'db-multishop' );
 
 		$this->status( 'done' );
