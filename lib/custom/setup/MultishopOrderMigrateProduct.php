@@ -21,7 +21,7 @@ class MultishopOrderMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return ['MultishopOrderMigrate'];
+		return ['MultishopOrderMigrateBase'];
 	}
 
 
@@ -43,8 +43,8 @@ class MultishopOrderMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 			ORDER BY p.orders_id
 		';
 		$insert = '
-			INSERT INTO "mshop_order_product"
-			SET "id" = ?, "siteid" = ?, "orderid" = ?, "type" = ?, "prodid" = ?, "prodcode" = ?, "name" = ?, "description" = ?,
+			INSERT INTO "mshop_order_base_product"
+			SET "id" = ?, "siteid" = ?, "baseid" = ?, "type" = ?, "prodid" = ?, "prodcode" = ?, "name" = ?, "description" = ?,
 				"quantity" = ?, "currencyid" = ?, "price" = ?, "tax" = ?, "taxrate" = ?, "taxflag" = ?,
 				"pos" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
 		';

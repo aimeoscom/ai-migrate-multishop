@@ -21,7 +21,7 @@ class MultishopOrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return ['MultishopOrderMigrate', 'MultishopOrderMigrateProduct'];
+		return ['MultishopOrderMigrateBase', 'MultishopOrderMigrate', 'MultishopOrderMigrateProduct'];
 	}
 
 
@@ -35,7 +35,7 @@ class MultishopOrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 		$manager = \Aimeos\MShop::create( $this->additional, 'product' );
 
 		try {
-			$prodId = $manager->findItem( 'rebate' );
+			$prodId = $manager->findItem( 'rebate' )->getId();
 		} catch( \Aimeos\MShop\Exception $e ) {
 			$prodId = $manager->saveItem( $manager->createItem()->setCode( 'rebate' )->setType( 'default' ) )->getId();
 		}
@@ -50,19 +50,19 @@ class MultishopOrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 				SUM(op.price) AS pprice, SUM(op.tax) AS ptax
 			FROM "tx_multishop_orders" o
 			LEFT JOIN "fe_users" f ON o."customer_id" = f."uid"
-			LEFT JOIN "mshop_order_product" op ON o."orders_id" = op."orderid"
+			LEFT JOIN "mshop_order_base_product" op ON o."orders_id" = op."baseid"
 			WHERE o."coupon_code" <> \'\' AND discount > 0
 			GROUP BY
 				o."orders_id", o."store_currency", o."customer_currency", o."coupon_discount_value",
 				o."coupon_code", o."crdate", o."orders_last_modified", o."ip_address", f."username"
 		';
 		$insert = '
-			INSERT INTO "mshop_order_coupon"
-			SET "siteid" = ?, "orderid" = ?, "ordprodid" = ?, "code" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
+			INSERT INTO "mshop_order_base_coupon"
+			SET "siteid" = ?, "baseid" = ?, "ordprodid" = ?, "code" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
 		';
 		$pinsert = '
-			INSERT INTO "mshop_order_product"
-			SET "siteid" = ?, "orderid" = ?, "type" = ?, "prodid" = ?, "prodcode" = ?, "name" = ?, "description" = ?,
+			INSERT INTO "mshop_order_base_product"
+			SET "siteid" = ?, "baseid" = ?, "type" = ?, "prodid" = ?, "prodcode" = ?, "name" = ?, "description" = ?,
 				"quantity" = ?, "currencyid" = ?, "price" = ?, "rebate" = ?, "tax" = ?, "taxrate" = ?, "taxflag" = ?,
 				"pos" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
 		';

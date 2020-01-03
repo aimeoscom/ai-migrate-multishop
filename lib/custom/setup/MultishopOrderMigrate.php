@@ -21,7 +21,7 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return ['MultishopMShopAddLocaleData'];
+		return ['MultishopOrderMigrateBase'];
 	}
 
 
@@ -52,8 +52,7 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 		';
 		$insert = '
 			INSERT INTO "mshop_order"
-			SET "siteid" = ?, "id" = ?, "sitecode" = ?, "type" = ?, "datepayment" = ?, "statuspayment" = ?, "langid" = ?,
-				"currencyid" = ?, "price" = ?, "costs" = ?, "rebate" = ?, "tax" = ?, "taxflag" = ?, "customerid" = ?, "comment" = ?,
+			SET "siteid" = ?, "id" = ?, "baseid" = ?, "type" = ?, "datepayment" = ?, "statuspayment" = ?,
 				"cdate" = ?, "cmonth" = ?, "cweek" = ?, "cwday" = ?, "chour" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
 		';
 		$sinsert = '
@@ -81,27 +80,18 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $siteCode );
+			$stmt->bind( 3, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 4, $row['by_phone'] ? 'phone' : 'web' );
 			$stmt->bind( 5, $row['orders_paid_timestamp'] ? date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ): null );
 			$stmt->bind( 6, $this->statuspayment( $row ), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 7, $langs[$row['language_id']] );
-			$stmt->bind( 8, $row['store_currency'] ?: $row['customer_currency'] );
-			$stmt->bind( 9, $row['grand_total'] - $row['payment_method_costs'] - $row['shipping_method_costs'] );
-			$stmt->bind( 10, $row['payment_method_costs'] + $row['shipping_method_costs'] );
-			$stmt->bind( 11, $row['discount'] + $row['coupon_discount_value'] );
-			$stmt->bind( 12, $row['grand_total'] - $row['grand_total_excluding_vat'] );
-			$stmt->bind( 13, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 14, $row['customer_id'] );
-			$stmt->bind( 15, $row['customer_comments'] );
-			$stmt->bind( 16, date( 'Y-m-d', $row['crdate'] ) );
-			$stmt->bind( 17, date( 'Y-m', $row['crdate'] ) );
-			$stmt->bind( 18, date( 'Y-W', $row['crdate'] ) );
-			$stmt->bind( 19, date( 'w', $row['crdate'] ) );
-			$stmt->bind( 20, date( 'H', $row['crdate'] ) );
-			$stmt->bind( 21, date( 'Y-m-d H:i:s', $row['crdate'] ) );
-			$stmt->bind( 22, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
-			$stmt->bind( 23, $row['username'] ?: $row['ip_address'] );
+			$stmt->bind( 7, date( 'Y-m-d', $row['crdate'] ) );
+			$stmt->bind( 8, date( 'Y-m', $row['crdate'] ) );
+			$stmt->bind( 9, date( 'Y-W', $row['crdate'] ) );
+			$stmt->bind( 10, date( 'w', $row['crdate'] ) );
+			$stmt->bind( 11, date( 'H', $row['crdate'] ) );
+			$stmt->bind( 12, date( 'Y-m-d H:i:s', $row['crdate'] ) );
+			$stmt->bind( 13, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
+			$stmt->bind( 14, $row['username'] ?: $row['ip_address'] );
 
 			$stmt->execute()->finish();
 

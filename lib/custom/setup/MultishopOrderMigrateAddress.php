@@ -21,7 +21,7 @@ class MultishopOrderMigrateAddress extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return ['MultishopOrderMigrate'];
+		return ['MultishopOrderMigrateBase'];
 	}
 
 
@@ -51,8 +51,8 @@ class MultishopOrderMigrateAddress extends \Aimeos\MW\Setup\Task\Base
 			LEFT JOIN "static_countries" dc ON o."delivery_country" = dc."cn_short_en"
 		';
 		$insert = '
-			INSERT INTO "mshop_order_address"
-			SET "siteid" = ?, "orderid" = ?, "addrid" = ?, "type" = ?, "salutation" = ?, "company" = ?, "vatid" = ?,
+			INSERT INTO "mshop_order_base_address"
+			SET "siteid" = ?, "baseid" = ?, "addrid" = ?, "type" = ?, "salutation" = ?, "company" = ?, "vatid" = ?,
 				"firstname" = ?, "lastname" = ?, "address1" = ?, "address2" = ?, "address3" = ?, "postal" = ?, "city" = ?,
 				"state" = ?, "langid" = ?, "countryid" = ?, "telephone" = ?, "telefax" = ?, "email" = ?,
 				"ctime" = ?, "mtime" = ?, "editor" = ?

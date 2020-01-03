@@ -21,7 +21,7 @@ class MultishopOrderMigrateService extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return ['MultishopOrderMigrate'];
+		return ['MultishopOrderMigrateBase'];
 	}
 
 
@@ -41,8 +41,8 @@ class MultishopOrderMigrateService extends \Aimeos\MW\Setup\Task\Base
 			LEFT JOIN "fe_users" f ON o."customer_id" = f."uid"
 		';
 		$insert = '
-			INSERT INTO "mshop_order_service"
-			SET "siteid" = ?, "orderid" = ?, "type" = ?, "code" = ?, "name" = ?,
+			INSERT INTO "mshop_order_base_service"
+			SET "siteid" = ?, "baseid" = ?, "type" = ?, "code" = ?, "name" = ?,
 				"currencyid" = ?, "price" = ?, "costs" = ?, "rebate" = ?, "tax" = ?, "taxrate" = ?, "taxflag" = ?,
 				"ctime" = ?, "mtime" = ?, "editor" = ?
 		';
