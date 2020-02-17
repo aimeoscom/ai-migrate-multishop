@@ -40,7 +40,7 @@ class MultishopCatalogMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 		$pconn->create( 'DELETE FROM "mshop_catalog_list" WHERE domain=\'product\'' )->execute()->finish();
 
 		$select = '
-			SELECT categories_id, products_id, ANY_VALUE(sort_order) AS sort_order
+			SELECT categories_id, products_id, MIN(sort_order) AS sort_order
 			FROM "tx_multishop_products_to_categories"
 			GROUP BY categories_id, products_id
 		';
@@ -51,12 +51,10 @@ class MultishopCatalogMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 		';
 
 		$plstmt = $pconn->create( $plinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
-
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$plstmt->bind( 2, $row['categories_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );

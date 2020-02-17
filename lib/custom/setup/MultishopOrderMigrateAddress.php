@@ -59,13 +59,11 @@ class MultishopOrderMigrateAddress extends \Aimeos\MW\Setup\Task\Base
 		';
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
+		$conn->create( 'START TRANSACTION' )->execute()->finish();
+		$result = $msconn->create($select )->execute();
 		$siteId = 1;
 
-		$conn->create( 'START TRANSACTION' )->execute()->finish();
-
-		$result = $msconn->create($select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			if( !isset( $langs[$row['language_id']] ) )
 			{
@@ -75,27 +73,27 @@ class MultishopOrderMigrateAddress extends \Aimeos\MW\Setup\Task\Base
 
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $row['billing_address_number'] );
+			$stmt->bind( 3, (string) $row['billing_address_number'] );
 			$stmt->bind( 4, 'payment' );
 			$stmt->bind( 5, $this->salutation( $row['billing_gender'] ) );
-			$stmt->bind( 6, $row['billing_company'] );
-			$stmt->bind( 7, $row['billing_vat_id'] );
-			$stmt->bind( 8, $row['billing_first_name'] . ( $row['billing_middle_name'] ? ' ' . $row['billing_middle_name'] : '' ) );
-			$stmt->bind( 9, $row['billing_last_name'] );
-			$stmt->bind( 10, $row['billing_address'] );
-			$stmt->bind( 11, $row['billing_building'] );
-			$stmt->bind( 12, $row['billing_room'] );
-			$stmt->bind( 13, $row['billing_zip'] );
-			$stmt->bind( 14, $row['billing_city'] );
-			$stmt->bind( 15, $row['billing_region'] );
+			$stmt->bind( 6, (string) $row['billing_company'] );
+			$stmt->bind( 7, (string) $row['billing_vat_id'] );
+			$stmt->bind( 8, (string) $row['billing_first_name'] . ( $row['billing_middle_name'] ? ' ' . $row['billing_middle_name'] : '' ) );
+			$stmt->bind( 9, (string) $row['billing_last_name'] );
+			$stmt->bind( 10, (string) $row['billing_address'] );
+			$stmt->bind( 11, (string) $row['billing_building'] );
+			$stmt->bind( 12, (string) $row['billing_room'] );
+			$stmt->bind( 13, (string) $row['billing_zip'] );
+			$stmt->bind( 14, (string) $row['billing_city'] );
+			$stmt->bind( 15, (string) $row['billing_region'] );
 			$stmt->bind( 16, $langs[$row['language_id']] );
-			$stmt->bind( 17, $row['billing_cc'] );
+			$stmt->bind( 17, (string) $row['billing_cc'] );
 			$stmt->bind( 18, $this->telephone( $row['billing_telephone'], $row['billing_mobile'] ) );
 			$stmt->bind( 19, $this->telephone( $row['billing_fax'] ) );
-			$stmt->bind( 20, $row['billing_email'] );
+			$stmt->bind( 20, (string) $row['billing_email'] );
 			$stmt->bind( 21, date( 'Y-m-d H:i:s', $row['crdate'] ) );
 			$stmt->bind( 22, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
-			$stmt->bind( 23, $row['username'] ?: $row['ip_address'] );
+			$stmt->bind( 23, (string) $row['username'] ?: $row['ip_address'] );
 
 			$stmt->execute()->finish();
 
@@ -110,27 +108,27 @@ class MultishopOrderMigrateAddress extends \Aimeos\MW\Setup\Task\Base
 			{
 				$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$stmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$stmt->bind( 3, $row['delivery_address_number'] );
+				$stmt->bind( 3, (string) $row['delivery_address_number'] );
 				$stmt->bind( 4, 'delivery' );
 				$stmt->bind( 5, $this->salutation( $row['delivery_gender'] ) );
-				$stmt->bind( 6, $row['delivery_company'] );
-				$stmt->bind( 7, $row['delivery_vat_id'] );
-				$stmt->bind( 8, $row['delivery_first_name'] . ( $row['delivery_middle_name'] ? ' ' . $row['delivery_middle_name'] : '' ) );
-				$stmt->bind( 9, $row['delivery_last_name'] );
-				$stmt->bind( 10, $row['delivery_address'] );
-				$stmt->bind( 11, $row['delivery_building'] );
-				$stmt->bind( 12, $row['delivery_room'] );
-				$stmt->bind( 13, $row['delivery_zip'] );
-				$stmt->bind( 14, $row['delivery_city'] );
-				$stmt->bind( 15, $row['delivery_region'] );
-				$stmt->bind( 16, $langs[$row['language_id']] );
-				$stmt->bind( 17, $row['delivery_cc'] );
+				$stmt->bind( 6, (string) $row['delivery_company'] );
+				$stmt->bind( 7, (string) $row['delivery_vat_id'] );
+				$stmt->bind( 8, (string) $row['delivery_first_name'] . ( $row['delivery_middle_name'] ? ' ' . $row['delivery_middle_name'] : '' ) );
+				$stmt->bind( 9, (string) $row['delivery_last_name'] );
+				$stmt->bind( 10, (string) $row['delivery_address'] );
+				$stmt->bind( 11, (string) $row['delivery_building'] );
+				$stmt->bind( 12, (string) $row['delivery_room'] );
+				$stmt->bind( 13, (string) $row['delivery_zip'] );
+				$stmt->bind( 14, (string) $row['delivery_city'] );
+				$stmt->bind( 15, (string) $row['delivery_region'] );
+				$stmt->bind( 16, (string) $langs[$row['language_id']] );
+				$stmt->bind( 17, (string) $row['delivery_cc'] );
 				$stmt->bind( 18, $this->telephone( $row['delivery_telephone'], $row['delivery_mobile'] ) );
 				$stmt->bind( 19, $this->telephone( $row['delivery_fax'] ) );
-				$stmt->bind( 20, $row['delivery_email'] );
+				$stmt->bind( 20, (string) $row['delivery_email'] );
 				$stmt->bind( 21, date( 'Y-m-d H:i:s', $row['crdate'] ) );
 				$stmt->bind( 22, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
-				$stmt->bind( 23, $row['username'] ?: $row['ip_address'] );
+				$stmt->bind( 23, (string) $row['username'] ?: $row['ip_address'] );
 
 				$stmt->execute()->finish();
 			}

@@ -36,7 +36,6 @@ class MultishopProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 		$pconn = $this->acquire( 'db-product' );
 
 		$pconn->create( 'START TRANSACTION' )->execute()->finish();
-
 		$pconn->create( 'DELETE FROM "mshop_product_list" WHERE domain=\'attribute\'' )->execute()->finish();
 
 		$select = '
@@ -50,12 +49,10 @@ class MultishopProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 		';
 
 		$plstmt = $pconn->create( $plinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
-
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$plstmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );

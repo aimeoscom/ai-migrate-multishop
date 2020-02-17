@@ -74,11 +74,10 @@ class MultishopSupplierMigrateText extends \Aimeos\MW\Setup\Task\Base
 			'metatitle' => 'meta_title', 'meta-keywords' => 'meta_keywords', 'meta-description' => 'meta_description',
 		];
 
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			foreach( $map as $type => $colname )
 			{

@@ -43,6 +43,7 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 		$msconn = $this->acquire( 'db-multishop' );
 		$conn = $this->acquire( 'db-order' );
 
+		$conn->create( 'START TRANSACTION' )->execute()->finish();
 		$conn->create( 'DELETE FROM "mshop_order"' )->execute()->finish();
 
 		$select = '
@@ -60,17 +61,14 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 			SET "siteid" = ?, "parentid" = ?, "type" = ?, "value" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
 		';
 
+		$taxFlag = $this->additional->getConfig()->get( 'mshop/price/taxflag', 1 );
 		$sstmt = $conn->create( $sinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
-		$taxFlag = $this->additional->getConfig()->get( 'mshop/price/taxflag', 1 );
+		$result = $msconn->create( $select )->execute();
 		$siteCode = 'default';
 		$siteId = 1;
 
-		$conn->create( 'START TRANSACTION' )->execute()->finish();
-
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			if( !isset( $langs[$row['language_id']] ) )
 			{

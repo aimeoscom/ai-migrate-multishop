@@ -60,12 +60,10 @@ class MultishopProductMigratePrice extends \Aimeos\MW\Setup\Task\Base
 
 		$plstmt = $pconn->create( $plinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
-
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, number_format( $row['products_price'], 2, '.', '' ) . ' - ' . $row['rate'] );

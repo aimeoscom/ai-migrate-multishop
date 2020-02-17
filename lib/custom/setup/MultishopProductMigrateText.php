@@ -72,11 +72,10 @@ class MultishopProductMigrateText extends \Aimeos\MW\Setup\Task\Base
 		];
 
 		$defText = '<p><br dir="ltr" spellcheck="false" id="tinymce" class="mceContentBody "></p>';
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			foreach( $map as $type => $colname )
 			{

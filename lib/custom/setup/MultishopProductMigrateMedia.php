@@ -56,12 +56,10 @@ class MultishopProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 
 		$plstmt = $pconn->create( $plinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
-
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			foreach( ['products_image', 'products_image1', 'products_image2', 'products_image3', 'products_image4'] as $idx => $name )
 			{

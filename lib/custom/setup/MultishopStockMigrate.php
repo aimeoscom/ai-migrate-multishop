@@ -36,7 +36,6 @@ class MultishopStockMigrate extends \Aimeos\MW\Setup\Task\Base
 		$conn = $this->acquire( 'db-stock' );
 
 		$conn->create( 'START TRANSACTION' )->execute()->finish();
-
 		$conn->create( 'DELETE FROM "mshop_stock"' )->execute()->finish();
 
 		$select = 'SELECT "products_id", "products_quantity" FROM "tx_multishop_products"';
@@ -46,11 +45,10 @@ class MultishopStockMigrate extends \Aimeos\MW\Setup\Task\Base
 		';
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, 'default' );

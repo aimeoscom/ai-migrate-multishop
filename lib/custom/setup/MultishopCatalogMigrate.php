@@ -57,7 +57,7 @@ class MultishopCatalogMigrate extends \Aimeos\MW\Setup\Task\Base
 
 		$result = $msconn->create( $select )->execute();
 
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			$map[$row['categories_id']] = $row;
 

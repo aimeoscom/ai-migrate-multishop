@@ -36,7 +36,6 @@ class MultishopSupplierMigrate extends \Aimeos\MW\Setup\Task\Base
 		$conn = $this->acquire( 'db-supplier' );
 
 		$conn->create( 'START TRANSACTION' )->execute()->finish();
-
 		$conn->create( 'DELETE FROM "mshop_supplier"' )->execute()->finish();
 
 		$select = 'SELECT * FROM "tx_multishop_manufacturers"';
@@ -46,11 +45,10 @@ class MultishopSupplierMigrate extends \Aimeos\MW\Setup\Task\Base
 		';
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, $row['manufacturers_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );

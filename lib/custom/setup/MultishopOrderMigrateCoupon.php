@@ -46,15 +46,18 @@ class MultishopOrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 		$select = '
 			SELECT
 				o."orders_id", o."store_currency", o."customer_currency", o."coupon_discount_value",
-				o."coupon_code", o."crdate", o."orders_last_modified", o."ip_address", f."username",
-				SUM(op.price) AS pprice, SUM(op.tax) AS ptax
+				o."coupon_code", o."crdate", o."orders_last_modified", o."ip_address", f."username"
 			FROM "tx_multishop_orders" o
 			LEFT JOIN "fe_users" f ON o."customer_id" = f."uid"
-			LEFT JOIN "mshop_order_base_product" op ON o."orders_id" = op."baseid"
 			WHERE o."coupon_code" <> \'\' AND discount > 0
 			GROUP BY
 				o."orders_id", o."store_currency", o."customer_currency", o."coupon_discount_value",
 				o."coupon_code", o."crdate", o."orders_last_modified", o."ip_address", f."username"
+		';
+		$opselect = '
+			SELECT SUM(price) AS pprice, SUM(tax) AS ptax
+			FROM "mshop_order_base_product"
+			WHERE "baseid" = ?
 		';
 		$insert = '
 			INSERT INTO "mshop_order_base_coupon"
@@ -71,32 +74,34 @@ class MultishopOrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 			SET "siteid" = ?, "parentid" = ?, "type" = ?, "value" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
 		';
 
+		$opstmt = $conn->create( $opselect, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$sstmt = $conn->create( $sinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$pstmt = $conn->create( $pinsert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
+
 		$taxFlag = $this->additional->getConfig()->get( 'mshop/price/taxflag', 1 );
 		$siteId = 1;
 
 		$conn->create( 'START TRANSACTION' )->execute()->finish();
-
 		$result = $msconn->create( $select )->execute();
 
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			$tax = $taxrate = 0;
+			$prow = $opstmt->bind( 1, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT )->execute()->fetch();
 
-			if( $row['pprice'] )
+			if( $prow['pprice'] )
 			{
-				if( $row['coupon_discount_value'] - $row['pprice'] >= 0 ) {
-					$tax = $row['ptax'];
+				if( $row['coupon_discount_value'] - $prow['pprice'] >= 0 ) {
+					$tax = $prow['ptax'];
 				} else {
-					$tax = $row['ptax'] / $row['pprice'] * $row['coupon_discount_value'];
+					$tax = $prow['ptax'] / $prow['pprice'] * $row['coupon_discount_value'];
 				}
 
 				if( $taxFlag ) {
-					$taxrate = $row['ptax'] / ( $row['pprice'] - $row['ptax'] ) * 100;
+					$taxrate = $prow['ptax'] / ( $prow['pprice'] - $prow['ptax'] ) * 100;
 				} else {
-					$taxrate = $row['ptax'] / $row['pprice'] * 100;
+					$taxrate = $prow['ptax'] / $prow['pprice'] * 100;
 				}
 			}
 

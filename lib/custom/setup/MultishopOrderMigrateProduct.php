@@ -55,10 +55,9 @@ class MultishopOrderMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 		$siteId = 1;
 
 		$conn->create( 'START TRANSACTION' )->execute()->finish();
-
 		$result = $msconn->create( $select )->execute();
 
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			if( ( $taxes = unserialize( $row['products_tax_data'] ) ) === false ) {
 				$taxes = [];

@@ -35,6 +35,7 @@ class MultishopSubscriptionMigrate extends \Aimeos\MW\Setup\Task\Base
 		$msconn = $this->acquire( 'db-multishop' );
 		$conn = $this->acquire( 'db-order' );
 
+		$conn->create( 'START TRANSACTION' )->execute()->finish();
 		$conn->create( 'DELETE FROM "mshop_subscription"' )->execute()->finish();
 
 		$select = 'SELECT * FROM "tx_multishop_subscriptions"';
@@ -46,13 +47,10 @@ class MultishopSubscriptionMigrate extends \Aimeos\MW\Setup\Task\Base
 		';
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
+		$result = $msconn->create( $select )->execute();
 		$siteId = 1;
 
-		$conn->create( 'START TRANSACTION' )->execute()->finish();
-
-		$result = $msconn->create( $select )->execute();
-
-		while( ( $row = $result->fetch() ) !== false )
+		while( $row = $result->fetch() )
 		{
 			$stmt->bind( 1, $row['subscriptions_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
