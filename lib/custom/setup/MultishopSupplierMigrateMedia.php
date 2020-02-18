@@ -65,7 +65,7 @@ class MultishopSupplierMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 			{
 				$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$stmt->bind( 2, $row['manufacturers_image'] );
-				$stmt->bind( 3, $row['manufacturers_image'] );
+				$stmt->bind( 3, 'manufacturers/original/' . substr( $row['manufacturers_image'], 0, 3 ) . '/' . $row['manufacturers_image'] );
 				$stmt->bind( 4, $this->getMimeType( $row['manufacturers_image'] ) );
 				$stmt->bind( 5, date( 'Y-m-d H:i:s', $row['last_modified'] ?: $row['date_added'] ) );
 				$stmt->bind( 6, date( 'Y-m-d H:i:s', $row['date_added'] ) );
