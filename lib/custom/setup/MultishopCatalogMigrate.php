@@ -51,6 +51,9 @@ class MultishopCatalogMigrate extends \Aimeos\MW\Setup\Task\Base
 				"mtime" = ?, "ctime" = ?, "editor" = ?, "parentid" = ?,
 				"level" = ?, "nleft" = ?, "nright" = ?
 		';
+		$update = '
+			UPDATE "mshop_catalog" SET "parentid" = ? WHERE "id" <> ? AND "siteid" = ? AND "parentid" = 0
+		';
 
 		$map = [];
 
@@ -90,7 +93,13 @@ class MultishopCatalogMigrate extends \Aimeos\MW\Setup\Task\Base
 		$stmt->bind( 12, $nright - 1, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 		$stmt->execute()->finish();
+		$rootId = $this->getLastId( $conn, 'db-catalog' );
 
+		$stmt = $conn->create( $update, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
+		$stmt->bind( 1, $rootId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+		$stmt->bind( 2, $rootId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+		$stmt->bind( 3, $siteId );
+		$stmt->execute()->finish();
 
 		$conn->create( 'COMMIT' )->execute()->finish();
 
