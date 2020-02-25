@@ -80,7 +80,7 @@ class MultishopProductMigratePrice extends \Aimeos\MW\Setup\Task\Base
 
 			$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$plstmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$plstmt->bind( 3, 'default|price|' . $id );
+			$plstmt->bind( 3, 'price|default|' . $id );
 			$plstmt->bind( 4, $id );
 			$plstmt->bind( 5, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );

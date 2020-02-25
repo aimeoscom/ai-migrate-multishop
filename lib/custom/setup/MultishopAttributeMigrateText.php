@@ -94,7 +94,7 @@ class MultishopAttributeMigrateText extends \Aimeos\MW\Setup\Task\Base
 
 				$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$plstmt->bind( 2, $row['products_options_values_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$plstmt->bind( 3, 'default|text|' . $id );
+				$plstmt->bind( 3, 'text|default|' . $id );
 				$plstmt->bind( 4, $id );
 				$plstmt->bind( 5, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );

@@ -57,7 +57,7 @@ class MultishopProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 		{
 			$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$plstmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$plstmt->bind( 3, 'default|attribute|' . $row['options_values_id'] );
+			$plstmt->bind( 3, 'attribute|default|' . $row['options_values_id'] );
 			$plstmt->bind( 4, $row['options_values_id'] );
 			$plstmt->bind( 5, $row['sort_order_option_value'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );

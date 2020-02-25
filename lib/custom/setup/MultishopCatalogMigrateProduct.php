@@ -59,7 +59,7 @@ class MultishopCatalogMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 		{
 			$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$plstmt->bind( 2, $row['categories_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$plstmt->bind( 3, 'default|product|' . $row['products_id'] );
+			$plstmt->bind( 3, 'product|default|' . $row['products_id'] );
 			$plstmt->bind( 4, $row['products_id'] );
 			$plstmt->bind( 5, $row['sort_order'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );

@@ -79,7 +79,7 @@ class MultishopProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 
 					$plstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 					$plstmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-					$plstmt->bind( 3, 'default|media|' . $id );
+					$plstmt->bind( 3, 'media|default|' . $id );
 					$plstmt->bind( 4, $id );
 					$plstmt->bind( 5, $idx, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 					$plstmt->bind( 6, date( 'Y-m-d H:i:s', $row['products_last_modified'] ?: $row['products_date_added'] ) );
