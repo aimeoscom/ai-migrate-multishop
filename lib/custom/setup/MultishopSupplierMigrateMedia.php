@@ -45,7 +45,8 @@ class MultishopSupplierMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 		$select = 'SELECT * FROM "tx_multishop_manufacturers"';
 		$plinsert = '
 			INSERT INTO "mshop_supplier_list"
-			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
+			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?,
+				"mtime" = ?, "ctime" = ?, "editor" = ?, "config" = ?,
 				"type" = \'default\', "domain" = \'media\', "status" = 1
 		';
 		$insert = '
@@ -82,6 +83,7 @@ class MultishopSupplierMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 				$plstmt->bind( 6, date( 'Y-m-d H:i:s', $row['last_modified'] ?: $row['date_added'] ) );
 				$plstmt->bind( 7, date( 'Y-m-d H:i:s', $row['date_added'] ) );
 				$plstmt->bind( 8, 'ai-migrate-multishop' );
+				$plstmt->bind( 9, '{}' );
 
 				$plstmt->execute()->finish();
 			}

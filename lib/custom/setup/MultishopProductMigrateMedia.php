@@ -45,7 +45,8 @@ class MultishopProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 		$select = 'SELECT * FROM "tx_multishop_products"';
 		$plinsert = '
 			INSERT INTO "mshop_product_list"
-			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
+			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?,
+				"mtime" = ?, "ctime" = ?, "editor" = ?, "config" = ?,
 				"type" = \'default\', "domain" = \'media\', "status" = 1
 		';
 		$insert = '
@@ -84,6 +85,7 @@ class MultishopProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 					$plstmt->bind( 6, date( 'Y-m-d H:i:s', $row['products_last_modified'] ?: $row['products_date_added'] ) );
 					$plstmt->bind( 7, date( 'Y-m-d H:i:s', $row['products_date_added'] ) );
 					$plstmt->bind( 8, 'ai-migrate-multishop' );
+					$plstmt->bind( 9, '{}' );
 
 					$plstmt->execute()->finish();
 				}

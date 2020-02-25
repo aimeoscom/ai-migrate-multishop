@@ -56,7 +56,8 @@ class MultishopAttributeMigrateText extends \Aimeos\MW\Setup\Task\Base
 		';
 		$plinsert = '
 			INSERT INTO "mshop_attribute_list"
-			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
+			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?,
+				"mtime" = ?, "ctime" = ?, "editor" = ?, "config" = ?,
 				"type" = \'default\', "domain" = \'text\', "status" = 1
 		';
 		$insert = '
@@ -99,6 +100,7 @@ class MultishopAttributeMigrateText extends \Aimeos\MW\Setup\Task\Base
 				$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );
 				$plstmt->bind( 7, date( 'Y-m-d H:i:s' ) );
 				$plstmt->bind( 8, 'ai-migrate-multishop' );
+				$plstmt->bind( 9, '{}' );
 
 				$plstmt->execute()->finish();
 			}

@@ -46,7 +46,7 @@ class MultishopProductMigrate extends \Aimeos\MW\Setup\Task\Base
 		$insert = '
 			INSERT INTO "mshop_product"
 			SET "siteid" = ?, "id" = ?, "type" = ?, "code" = ?, "label" = ?, "start" = ?, "end" = ?,
-				"status" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?
+				"status" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?, "config" = ?
 		';
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
@@ -66,6 +66,7 @@ class MultishopProductMigrate extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 9, date( 'Y-m-d H:i:s', $row['products_last_modified'] ?: $row['products_date_added'] ) );
 			$stmt->bind( 10, date( 'Y-m-d H:i:s', $row['products_date_added'] ) );
 			$stmt->bind( 11, 'ai-migrate-multishop' );
+			$stmt->bind( 12, '{}' );
 
 			$stmt->execute()->finish();
 		}

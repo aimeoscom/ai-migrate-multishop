@@ -44,7 +44,8 @@ class MultishopProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 		';
 		$plinsert = '
 			INSERT INTO "mshop_product_list"
-			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
+			SET "siteid" = ?, "parentid" = ?, "key" = ?, "refid" = ?, "pos" = ?,
+				"mtime" = ?, "ctime" = ?, "editor" = ?, "config" = ?,
 				"type" = \'default\', "domain" = \'attribute\', "status" = 1
 		';
 
@@ -62,6 +63,7 @@ class MultishopProductMigrateAttribute extends \Aimeos\MW\Setup\Task\Base
 			$plstmt->bind( 6, date( 'Y-m-d H:i:s' ) );
 			$plstmt->bind( 7, date( 'Y-m-d H:i:s' ) );
 			$plstmt->bind( 8, 'ai-migrate-multishop' );
+			$plstmt->bind( 9, '{}' );
 
 			$plstmt->execute()->finish();
 		}
