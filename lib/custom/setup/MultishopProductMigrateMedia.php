@@ -51,7 +51,7 @@ class MultishopProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 		';
 		$insert = '
 			INSERT INTO "mshop_media"
-			SET "siteid" = ?, "label" = ?, "link" = ?, "mimetype" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
+			SET "siteid" = ?, "label" = ?, "link" = ?, "preview" = ?, "mimetype" = ?, "mtime" = ?, "ctime" = ?, "editor" = ?,
 				"type" = \'default\', "domain" = \'product\', "status" = 1
 		';
 
@@ -69,10 +69,11 @@ class MultishopProductMigrateMedia extends \Aimeos\MW\Setup\Task\Base
 					$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 					$stmt->bind( 2, $row[$name] );
 					$stmt->bind( 3, 'products/original/' . substr( $row[$name], 0, 3 ) . '/' . $row[$name] );
-					$stmt->bind( 4, $this->getMimeType( $row[$name] ) );
-					$stmt->bind( 5, date( 'Y-m-d H:i:s', $row['products_last_modified'] ?: $row['products_date_added'] ) );
-					$stmt->bind( 6, date( 'Y-m-d H:i:s', $row['products_date_added'] ) );
-					$stmt->bind( 7, 'ai-migrate-multishop' );
+					$stmt->bind( 4, '{}' ); // previews
+					$stmt->bind( 5, $this->getMimeType( $row[$name] ) );
+					$stmt->bind( 6, date( 'Y-m-d H:i:s', $row['products_last_modified'] ?: $row['products_date_added'] ) );
+					$stmt->bind( 7, date( 'Y-m-d H:i:s', $row['products_date_added'] ) );
+					$stmt->bind( 8, 'ai-migrate-multishop' );
 
 					$stmt->execute()->finish();
 					$id = $this->getLastId( $conn, 'db-media' );
