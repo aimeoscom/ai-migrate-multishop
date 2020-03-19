@@ -51,7 +51,7 @@ class MultishopAttributeMigrate extends \Aimeos\MW\Setup\Task\Base
 		$conn->create( 'DELETE FROM "mshop_attribute"' )->execute()->finish();
 
 		$select = '
-			SELECT  pov.products_options_values_id, pov.products_options_values_name, po.products_options_name, po.sort_order
+			SELECT  pov.products_options_values_id, pov.products_options_values_name, po.products_options_name, povpo.sort_order
 			FROM tx_multishop_products_options_values pov
 			LEFT JOIN tx_multishop_products_options_values_to_products_options povpo ON povpo.products_options_values_id = pov.products_options_values_id
 			LEFT JOIN tx_multishop_products_options po ON po.products_options_id = povpo.products_options_id AND po.language_id = 0
