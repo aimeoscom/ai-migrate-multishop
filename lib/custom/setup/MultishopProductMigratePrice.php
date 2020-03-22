@@ -70,7 +70,7 @@ class MultishopProductMigratePrice extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 2, number_format( $row['products_price'], 2, '.', '' ) . ' - ' . $row['rate'] );
 			$stmt->bind( 3, 'EUR' );
 			$stmt->bind( 4, number_format( $row['products_price'], 2, '.', '' ) );
-			$stmt->bind( 5, $row['rate'] );
+			$stmt->bind( 5, json_encode( ['' => $row['rate']] ) );
 			$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
 			$stmt->bind( 7, date( 'Y-m-d H:i:s' ) );
 			$stmt->bind( 8, 'ai-migrate-multishop' );
