@@ -57,7 +57,7 @@ class MultishopProductMigrate extends \Aimeos\MW\Setup\Task\Base
 		{
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, $row['products_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $row['event_starttime'] ? 'event' : 'default' );
+			$stmt->bind( 3, $row['event_starttime'] !== null ? 'event' : 'default' );
 			$stmt->bind( 4, $row['sku_code'] ?: $row['products_id'] );
 			$stmt->bind( 5, $row['products_name'] ?: '' );
 			$stmt->bind( 6, $row['event_starttime'] ? date( 'Y-m-d H:i:s', $row['event_starttime'] ) : null );
