@@ -79,7 +79,7 @@ class MultishopOrderMigrateBase extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 5, $row['store_currency'] ?: $row['customer_currency'] );
 			$stmt->bind( 6, $row['grand_total'] - $row['payment_method_costs'] - $row['shipping_method_costs'] );
 			$stmt->bind( 7, $row['payment_method_costs'] + $row['shipping_method_costs'] );
-			$stmt->bind( 8, $row['discount'] + $row['coupon_discount_value'] );
+			$stmt->bind( 8, $row['discount'] );
 			$stmt->bind( 9, $row['grand_total'] - $row['grand_total_excluding_vat'] );
 			$stmt->bind( 10, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 11, $row['customer_id'] );
