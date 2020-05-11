@@ -21,7 +21,7 @@ class MultishopOrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies() : array
 	{
-		return ['MultishopOrderMigrateBase', 'MultishopOrderMigrate', 'MultishopOrderMigrateProduct'];
+		return ['MultishopOrderMigrateBase', 'MultishopOrderMigrate', 'MultishopOrderMigrateProduct', 'MultishopStockMigrate'];
 	}
 
 
@@ -33,11 +33,18 @@ class MultishopOrderMigrateCoupon extends \Aimeos\MW\Setup\Task\Base
 		$this->msg( 'Migrating Multishop order coupon data', 0 );
 
 		$manager = \Aimeos\MShop::create( $this->additional, 'product' );
+		$stockManager = \Aimeos\MShop::create( $this->additional, 'stock' );
 
 		try {
 			$prodId = $manager->findItem( 'rebate' )->getId();
 		} catch( \Aimeos\MShop\Exception $e ) {
-			$prodId = $manager->saveItem( $manager->createItem()->setCode( 'rebate' )->setType( 'default' ) )->getId();
+			$prodId = $manager->saveItem( $manager->createItem()->setCode( 'rebate' )->setType( 'default' )->setLabel( 'Rebate' ) )->getId();
+		}
+
+		try {
+			$stockManager->findItem( 'rebate', [], 'product', 'default' );
+		} catch( \Aimeos\MShop\Exception $e ) {
+			$stockManager->saveItem( $stockManager->createItem()->setProductCode( 'rebate' )->setType( 'default' ), false );
 		}
 
 		$msconn = $this->acquire( 'db-multishop' );
