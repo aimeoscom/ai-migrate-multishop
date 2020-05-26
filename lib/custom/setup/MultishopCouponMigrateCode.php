@@ -58,12 +58,13 @@ class MultishopCouponMigrateCode extends \Aimeos\MW\Setup\Task\Base
 			}
 
 			$parentId = $map[$row['status'] . '-' . $row['discount_type'] . '-' . $row['discount']];
+			$count = $row['max_usage'] ? $row['max_usage'] - $row['times_used'] : null;
 
 			$stmt->bind( 1, $row['id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 2, $parentId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 3, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 4, $row['code'] );
-			$stmt->bind( 5, $row['max_usage'] - $row['times_used'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 5, $count, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 6, $row['startdate'] ? date( 'Y-m-d H:i:s', $row['startdate'] ) : null );
 			$stmt->bind( 7, $row['enddate'] ? date( 'Y-m-d H:i:s', $row['enddate'] ) : null );
 			$stmt->bind( 8, date( 'Y-m-d H:i:s' ) );
