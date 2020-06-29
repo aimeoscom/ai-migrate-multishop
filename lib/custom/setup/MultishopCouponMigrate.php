@@ -40,9 +40,11 @@ class MultishopCouponMigrate extends \Aimeos\MW\Setup\Task\Base
 		$conn->create( 'DELETE FROM "mshop_coupon"' )->execute()->finish();
 
 		$select = '
-			SELECT discount, status, discount_type
-			FROM tx_multishop_coupons
-			GROUP BY discount,status,discount_type
+			SELECT c.discount, c.discount_type, GROUP_CONCAT(ctp.products_id) AS prodids
+			FROM tx_multishop_coupons c
+			LEFT JOIN tx_multishop_coupon_codes_to_products ctp ON c.id=ctp.coupons_id
+			WHERE c.status = 1 AND c.enddate > UNIX_TIMESTAMP() AND c.times_used <> max_usage
+			GROUP BY c.id
 		';
 		$insert = '
 			INSERT INTO "mshop_coupon"
@@ -55,26 +57,36 @@ class MultishopCouponMigrate extends \Aimeos\MW\Setup\Task\Base
 
 		while( $row = $result->fetch() )
 		{
+			if( $row['discount'] == 0 ){
+				continue;
+			}
+
 			switch( $row['discount_type'] )
 			{
 				case 'price':
 					$provider = 'FixedRebate';
-					$config = ['fixedrebate.productcode' => 'rebate', 'fixedrebate.rebate' => $row['discount']];
+					$config = ['fixedrebate.productcode' => 'rebate', 'fixedrebate.rebate' => ['EUR' => $row['discount']]];
 					break;
 				case 'percentage':
 					$provider = 'PercentRebate';
 					$config = ['percentrebate.productcode' => 'rebate', 'percentrebate.rebate' => $row['discount']];
 					break;
 				default:
-					$provider = '';
-					$config = [];
+					continue 2;
+			}
+
+			if( $row['prodids'] )
+			{
+				$provider .= ',Required';
+				$config['required.only'] = 1;
+				$config['required.productcode'] = $row['prodids'];
 			}
 
 			$stmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $row['discount_type'] . '-' . $row['discount'] );
+			$stmt->bind( 2, $row['discount_type'] . '-' . $row['discount'] . ':' . $row['prodids'] );
 			$stmt->bind( 3, $provider );
 			$stmt->bind( 4, json_encode( $config ) );
-			$stmt->bind( 5, $row['status'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 5, 1, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 6, date( 'Y-m-d H:i:s' ) );
 			$stmt->bind( 7, date( 'Y-m-d H:i:s' ) );
 			$stmt->bind( 8, 'ai-migrate-multishop' );

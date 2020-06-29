@@ -40,7 +40,13 @@ class MultishopCouponMigrateCode extends \Aimeos\MW\Setup\Task\Base
 		$conn->create( 'START TRANSACTION' )->execute()->finish();
 		$conn->create( 'DELETE FROM "mshop_coupon_code"' )->execute()->finish();
 
-		$select = 'SELECT * FROM tx_multishop_coupons WHERE code <> \'\'';
+		$select = '
+			SELECT c.*, GROUP_CONCAT(ctp.products_id) AS prodids
+			FROM tx_multishop_coupons c
+			LEFT JOIN tx_multishop_coupon_codes_to_products ctp ON c.id=ctp.coupons_id
+			WHERE code <> \'\' AND c.status = 1 AND c.enddate > UNIX_TIMESTAMP() AND c.times_used <> max_usage
+			GROUP BY c.id
+		';
 		$insert = '
 			INSERT INTO "mshop_coupon_code"
 			SET "id" = ?, "parentid" = ?, "siteid" = ?, "code" = ?, "count" = ?,
@@ -53,11 +59,11 @@ class MultishopCouponMigrateCode extends \Aimeos\MW\Setup\Task\Base
 
 		while( $row = $result->fetch() )
 		{
-			if( !isset( $map[$row['status'] . '-' . $row['discount_type'] . '-' . $row['discount']] ) ) {
+			if( !isset( $map[$row['discount_type'] . '-' . $row['discount'] . ':' . $row['prodids']] ) ) {
 				continue;
 			}
 
-			$parentId = $map[$row['status'] . '-' . $row['discount_type'] . '-' . $row['discount']];
+			$parentId = $map[$row['discount_type'] . '-' . $row['discount'] . ':' . $row['prodids']];
 			$count = $row['max_usage'] ? $row['max_usage'] - $row['times_used'] : null;
 
 			$stmt->bind( 1, $row['id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
@@ -89,7 +95,7 @@ class MultishopCouponMigrateCode extends \Aimeos\MW\Setup\Task\Base
 		$stmt = $conn->create( 'SELECT "id", "label", "status" FROM "mshop_coupon"' )->execute();
 
 		while( ( $row = $stmt->fetch() ) !== false ) {
-			$map[$row['status'] . '-' . $row['label']] = $row['id'];
+			$map[$row['label']] = $row['id'];
 		}
 
 		return $map;
