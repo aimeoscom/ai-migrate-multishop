@@ -106,6 +106,6 @@ class MultishopSubscriptionMigrate extends \Aimeos\MW\Setup\Task\Base
 
 	protected function stat( array $row ) : int
 	{
-		return $row['deleted'] == 0 && $row['disable'] == 0 && $row['expired'] == 0;
+		return $row['deleted'] == 0 && $row['disable'] == 0 && $row['expired'] > time();
 	}
 }
