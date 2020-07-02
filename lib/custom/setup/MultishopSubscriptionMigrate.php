@@ -92,7 +92,7 @@ class MultishopSubscriptionMigrate extends \Aimeos\MW\Setup\Task\Base
 
 	protected function reason( array $row ) : ?int
 	{
-		if( $row['expired'] > time() ) {
+		if( $row['expired'] ) {
 			return \Aimeos\MShop\Subscription\Item\Iface::REASON_END;
 		}
 
@@ -106,6 +106,6 @@ class MultishopSubscriptionMigrate extends \Aimeos\MW\Setup\Task\Base
 
 	protected function stat( array $row ) : int
 	{
-		return $row['deleted'] == 0 && $row['disable'] == 0 && $row['expired'] > time();
+		return $row['deleted'] == 0 && $row['disable'] == 0 && $row['expired'] == 0;
 	}
 }
