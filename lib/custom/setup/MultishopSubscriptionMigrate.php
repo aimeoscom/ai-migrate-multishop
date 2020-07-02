@@ -92,11 +92,11 @@ class MultishopSubscriptionMigrate extends \Aimeos\MW\Setup\Task\Base
 
 	protected function reason( array $row ) : ?int
 	{
-		if( $row['expired'] ) {
+		if( $row['expired'] > time() ) {
 			return \Aimeos\MShop\Subscription\Item\Iface::REASON_END;
 		}
 
-		if( $row['cancelled_date'] ) {
+		if( $row['cancelled_date'] > time() ) {
 			return \Aimeos\MShop\Subscription\Item\Iface::REASON_CANCEL;
 		}
 
