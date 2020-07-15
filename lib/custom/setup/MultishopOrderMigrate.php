@@ -131,7 +131,7 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 				$sstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$sstmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$sstmt->bind( 3, 'status-payment' );
-				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_PENDING, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$sstmt->bind( 5, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['crdate'] ) );
 				$sstmt->bind( 6, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['orders_last_modified'] ) );
 				$sstmt->bind( 7, $row['username'] ?: $row['ip_address'] );
@@ -141,7 +141,7 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 				$sstmt->bind( 1, $siteId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$sstmt->bind( 2, $row['orders_id'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$sstmt->bind( 3, 'email-payment' );
-				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$sstmt->bind( 4, \Aimeos\MShop\Order\Item\Base::PAY_PENDING, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$sstmt->bind( 5, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['crdate'] ) );
 				$sstmt->bind( 6, date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ?: $row['orders_last_modified'] ) );
 				$sstmt->bind( 7, $row['username'] ?: $row['ip_address'] );
@@ -179,7 +179,7 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 		}
 
 		if( !$row['paid'] && $row['bill'] ) {
-			return \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED;
+			return \Aimeos\MShop\Order\Item\Base::PAY_PENDING;
 		}
 
 		if( $row['paid'] ) {
