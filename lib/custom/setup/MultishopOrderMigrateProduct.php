@@ -50,7 +50,6 @@ class MultishopOrderMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 		';
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
-		$taxFlag = $this->additional->getConfig()->get( 'mshop/price/taxflag', 1 );
 		$orderid = null;
 		$siteId = 1;
 
@@ -78,10 +77,10 @@ class MultishopOrderMigrateProduct extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 8, (string) $row['products_description'] );
 			$stmt->bind( 9, (int) $row['qty'], \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 10, $row['store_currency'] ?: $row['customer_currency'] );
-			$stmt->bind( 11, $row['final_price'] );
+			$stmt->bind( 11, $row['final_price'] + ( $taxes['total_tax'] ?? 0 ) );
 			$stmt->bind( 12, $taxes['total_tax'] ?? '0.0000' );
 			$stmt->bind( 13, json_encode( ['' => $row['products_tax']] ) ); // tax rate
-			$stmt->bind( 14, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 14, ( $taxes['total_tax'] ?? null ) ? 1 : 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 15, $pos++, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 16, date( 'Y-m-d H:i:s', $row['crdate'] ) );
 			$stmt->bind( 17, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );

@@ -58,7 +58,6 @@ class MultishopOrderMigrateBase extends \Aimeos\MW\Setup\Task\Base
 
 		$siteId = 1;
 		$siteCode = 'default';
-		$taxFlag = $this->additional->getConfig()->get( 'mshop/price/taxflag', 1 );
 
 		$stmt = $conn->create( $insert, \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 		$conn->create( 'START TRANSACTION' )->execute()->finish();
@@ -81,7 +80,7 @@ class MultishopOrderMigrateBase extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 7, $row['payment_method_costs'] + $row['shipping_method_costs'] );
 			$stmt->bind( 8, $row['discount'] );
 			$stmt->bind( 9, $row['grand_total'] - $row['grand_total_excluding_vat'] );
-			$stmt->bind( 10, $taxFlag, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 10, $row['grand_total'] - $row['grand_total_excluding_vat'] < 0.01 ? 0 : 1, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$stmt->bind( 11, $row['customer_id'] );
 			$stmt->bind( 12, $row['customer_comments'] );
 			$stmt->bind( 13, date( 'Y-m-d H:i:s', $row['crdate'] ) );
