@@ -54,7 +54,8 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 		$insert = '
 			INSERT INTO "mshop_order"
 			SET "siteid" = ?, "id" = ?, "baseid" = ?, "type" = ?, "datepayment" = ?, "statuspayment" = ?,
-				"cdate" = ?, "cmonth" = ?, "cweek" = ?, "cwday" = ?, "chour" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
+				"datedelivery" = ?, "statusdelivery" = ?, "ctime" = ?, "mtime" = ?, "editor" = ?
+				"cdate" = ?, "cmonth" = ?, "cweek" = ?, "cwday" = ?, "chour" = ?
 		';
 		$sinsert = '
 			INSERT INTO "mshop_order_status"
@@ -82,14 +83,16 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 			$stmt->bind( 4, $row['by_phone'] ? 'phone' : 'web' );
 			$stmt->bind( 5, $row['orders_paid_timestamp'] ? date( 'Y-m-d H:i:s', $row['orders_paid_timestamp'] ): null );
 			$stmt->bind( 6, $this->statuspayment( $row ), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 7, date( 'Y-m-d', $row['crdate'] ) );
-			$stmt->bind( 8, date( 'Y-m', $row['crdate'] ) );
-			$stmt->bind( 9, date( 'Y-W', $row['crdate'] ) );
-			$stmt->bind( 10, date( 'w', $row['crdate'] ) );
-			$stmt->bind( 11, date( 'H', $row['crdate'] ) );
-			$stmt->bind( 12, date( 'Y-m-d H:i:s', $row['crdate'] ) );
-			$stmt->bind( 13, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
-			$stmt->bind( 14, $row['username'] ?: $row['ip_address'] );
+			$stmt->bind( 7, null ); // delivery date
+			$stmt->bind( 8, $this->statusdelivery( $row ), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 9, date( 'Y-m-d H:i:s', $row['crdate'] ) );
+			$stmt->bind( 10, date( 'Y-m-d H:i:s', $row['orders_last_modified'] ) );
+			$stmt->bind( 11, $row['username'] ?: $row['ip_address'] );
+			$stmt->bind( 12, date( 'Y-m-d', $row['crdate'] ) );
+			$stmt->bind( 13, date( 'Y-m', $row['crdate'] ) );
+			$stmt->bind( 14, date( 'Y-W', $row['crdate'] ) );
+			$stmt->bind( 15, date( 'w', $row['crdate'] ) );
+			$stmt->bind( 16, date( 'H', $row['crdate'] ) );
 
 			$stmt->execute()->finish();
 
@@ -169,6 +172,20 @@ class MultishopOrderMigrate extends \Aimeos\MW\Setup\Task\Base
 		$this->release( $msconn, 'db-multishop' );
 
 		$this->status( 'done' );
+	}
+
+
+	protected function statusdelivery( array $row ) : int
+	{
+		switch( $row['status'] )
+		{
+			case 2: return \Aimeos\MShop\Order\Item\Base::STAT_PROGRESS;
+			case 3: return \Aimeos\MShop\Order\Item\Base::STAT_DELETED;
+			case 4: return \Aimeos\MShop\Order\Item\Base::STAT_DELIVERED;
+			case 5: return \Aimeos\MShop\Order\Item\Base::STAT_DISPATCHED;
+		}
+
+		return \Aimeos\MShop\Order\Item\Base::STAT_UNFINISHED;
 	}
 
 
